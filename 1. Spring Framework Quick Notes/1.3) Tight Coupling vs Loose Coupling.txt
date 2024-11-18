@@ -1,0 +1,98 @@
+=> Tight Coupling vs Loose Coupling
+========================================
+
+=> Coupling: It refers to how closely connected different components or systems are.
+
+=> Tight Coupling: Software components are highly dependent on each other. Change in one will affect the other.
+
+=> Importance of Loose Coupling:
+(a) Flexibility and Maintainability
+(b) Scalability
+(c) Testing (Components can be tested independently)
+
+=> How to achieve Loose Coupling?
+(a) By using the interface and abstraction.
+(b) Dependency Injection (In Spring)
+(c) Event Driven Architecture (Components will communicate through events)
+
+=> Example of Tight Coupling: Say we have following classes in com.tight.coupling package:
+(a) UserDatabase.java: This class will access and fetch the data from the database
+public class UserDatabase {
+    public String getUserDetails() {
+        return "User Details From the database";
+    }
+}
+
+(b) UserManager.java: This class will be responsible for managing all user info.
+public class UserManager {
+    private UserDatabase userDatabase = new UserDatabase();
+    public String getUserInfo() {
+        return userDatabase.getUserDetails();
+    }
+}
+
+(c) TightCoupling.java: This class will be the main class.
+public class TightCoupling {
+    public static void main(String[] args) {
+        UserManager userManager = new UserManager();
+        System.out.println(userManager.getUserInfo());
+    }
+}
+
+Here, UserManager is tightly coupled with UserDatabase. Say we are using database A in UserDatabase but tomorrow
+we want to shift to database B then we can't shift without changing the code in UserManager because it is tightly
+coupled with UserDatabase.
+
+=> Example of Loose Coupling: Say we have following interface (we can even use abstract class instead) and classes
+in com.light.coupling package:
+
+(a) UserDataProvider.java interface: For declaring abstract methods to be used for database interaction.
+interface UserDataProvider {
+    String getUserDetails();
+}
+
+(b) UserDatabaseProvider.java
+public class UserDatabaseProvider implements UserDataProvider {
+    @Override
+    public String getUserDetails() {
+        return "User Details From the database";
+    }
+}
+
+(c) UserManager.java:
+public class UserManager {
+    private UserDataProvider userDataProvider;
+    public UserManager(UserDataProvider userDataProvider) {
+        this.userDataProvider = userDataProvider;
+    }
+
+    public String getUserInfo() {
+        return userDataProvider.getUserDetails();
+    }
+}
+
+(d) LooseCoupling.java:
+public class LooseCoupling {
+    public static void main(String[] args) {
+        UserDataProvider databaseProvider = new UserDatabaseProvider();
+        UserManager userManagerWithDB = new UserManager(databaseProvider);
+        System.out.println(userManagerWithDB.getUserInfo());
+    }
+}
+
+(Q) Why so much?
+Say tomorrow we want to shift from database to WebServices then we will simply do the following changes:
+(i) Create a class for the WebServices data fetching:
+public class WebServicesProvider implements UserDataProvider {
+    @Override
+    public String getUserDetails() {
+        return "User Details From the WebServices";
+    }
+}
+
+(ii) We are not required to provide any change in UserManager
+
+(iii) In the LooseCoupling.java class main() method:
+UserDataProvider webServicesProvider = new WebServicesProvider();
+UserManager userManagerWithWS = new UserManager(webServicesProvider);
+System.out.println(userManagerWithWS.getUserInfo());

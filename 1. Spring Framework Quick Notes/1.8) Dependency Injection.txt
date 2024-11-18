@@ -1,0 +1,115 @@
+=> Dependency Injection
+===========================
+
+=> We know that Dependency Injection is a design pattern used in software development to achieve loose
+coupling between classes by removing the direct dependency instatiation from the dependent class itself.
+
+=> Types of Dependency Injection:
+(a) Constructor Injection
+(b) Setter Injection
+
+=> (a) Constructor Injection:
+-------------------------------
+(i) In this dependencies are provided to the dependent class through its constructor.
+
+(ii) Dependencies are passed as arguments to the constructor when the dependent class is instantiated.
+
+(iii) Create two classes in a package (say com.example.car) named MyCar and Specification (where Specification
+class holds the specification for class MyCar).
+
+Specification.java:
+package com.example.beans;
+
+public class Specification {
+	private String make;
+	private String model;
+	public String getMake() {
+		return make;
+	}
+	public void setMake(String make) {
+		this.make = make;
+	}
+	public String getModel() {
+		return model;
+	}
+	public void setModel(String model) {
+		this.model = model;
+	}
+	
+	@Override
+	public String toString() {
+		return "Specs {make="+make+" and model="+model+"}";
+	}
+}
+
+
+
+MyCar.java:
+package com.example.beans;
+
+public class MyCar {
+	private Specification specification;
+	
+	public MyCar(Specification specification) {
+		this.specification = specification;
+	}
+	
+	public void displayDetails() {
+		System.out.println("Car Details: "+specification);
+	}
+}
+
+applicationContext.xml:
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- bean definitions here -->
+    <bean id="specs" class="com.example.beans.Specification">
+    	<property name="make" value="Toyota" />   
+    	<property name="model" value="Corolla" /> 
+    </bean>
+    
+    <bean id="myBean" class="com.example.beans.MyCar">
+    	<constructor-arg ref="specs" />
+    </bean>
+
+</beans>
+
+
+=> Setter Injection:
+-----------------------
+In this we have to do two changes:
+(i) MyCar.java:
+package com.example.beans;
+
+public class MyCar {
+	private Specification specification;
+	
+	// Getter Method
+	
+	public void displayDetails() {
+		System.out.println("Car Details: "+specification);
+	}
+}
+
+(ii) In applicationContext.xml:
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- bean definitions here -->
+    <bean id="specs" class="com.example.beans.Specification">
+    	<property name="make" value="Toyota" />   
+    	<property name="model" value="Corolla" /> 
+    </bean>
+    
+    <bean id="myBean" class="com.example.beans.MyCar">
+    	<property name="specification" ref="specs" />
+    </bean>
+
+</beans>

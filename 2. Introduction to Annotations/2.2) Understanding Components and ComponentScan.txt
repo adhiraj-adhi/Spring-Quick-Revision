@@ -1,0 +1,133 @@
+2.2) Understanding Components and ComponentScan:
+===================================================
+
+=> Component:
+--------------
+(a) It refers to a Java class that is managed by the Spring IoC container.
+(b) A component is typically a Java class that is annotated with @Component annotation or its specialized
+annotations like @Service, @Repository, or @Controller. By adding these annotations, we tell Spring, "Hey,
+this class is important; manage it for me!".
+(c) Components are scanned by the Spring IoC container when it starts.
+(d) We can define components in Spring using two ways:
+    (i) Using XML  (ii) Using Annotations
+
+(e) Defining a component using Annotation:
+@Component // Marks the class as a Spring managed component
+public class MyComponent {
+    // class implementation
+}
+
+(f) Note: @Component annotation is present in the org.springframework.stereotype.Component.
+
+
+=> Component Scanning:
+-----------------------
+(a) It is a feature that helps to automatically detect and register beans from predefined package paths.
+(b) In other words, Spring needs to know where to look for the components in our project. Component scanning
+is the process Spring uses to search for classes annotated with @Component (and similar annotation) in our
+project and automatically register them in the Spring Container.
+
+
+
+=> Enable Component Scanning using XML:
+----------------------------------------
+
+<context:component-scan base-package="com.adhi.beans" />
+(Here, com.adhi.beans is the package we want the component scanning to be done).
+
+
+=> Example of Component Scanning:
+-----------------------------------
+A. Create a class named com.example.beans.Employee:
+package com.example.beans;
+
+import org.springframework.stereotype.Component;
+
+@Component
+public class Employee {
+	private int empId;
+	private String empName;
+	private double salary;
+
+    // We do not need getter and setter methods
+	
+	@Override
+	public String toString() {
+		return "Employee [empId=" + empId + ", empName=" + empName + ", salary=" + salary + "]";
+	}	
+}
+
+
+Note: We can provide custom name for the component as @Component("anyCustomeName")
+
+
+B. applicationContext.xml (XML configuration of context xomponent scan is needed here):
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context" xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"> <!-- bean definitions here -->
+
+	<context:component-scan base-package="com.example.beans" />
+
+</beans>
+
+C. Main class:
+package com.example.main;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+import com.example.beans.Employee;
+
+public class Main 
+{
+    public static void main( String[] args )
+    {
+        ApplicationContext context = new ClassPathXmlApplicationContext("com/example/resources/applicationContext.xml");
+        Employee emp = (Employee) context.getBean("employee");
+        /* In getBean() we provide the name of class in Camel case if no custom name 
+         * is provoded for the component
+         */
+        
+        System.out.println(emp);  O/P: Default values
+    }
+}
+
+
+=> What if we do not want the default values in above example?
+----------------------------------------------------------------
+We can use @Value annotation in Employee class as:
+@Value("101")
+private int empId;
+@Value("Abhi")
+private String empName;
+@Value("25000")
+private double salary;
+
+
+=> @Value annotation:
+--------------------------
+(a) We can use @Value for Dynamic Values in Spring: The @Value annotation in Spring is used to inject 
+values into variables from external sources like properties files, environment variables, or inline values.
+
+Example: Injecting System Property
+@Value("${java.home}")
+private String javaHome;
+
+    (i) ${java.home} refers to a system property (or a key in a properties file) that holds the path to 
+    the Java installation directory.
+    (ii) When the application starts, Spring automatically fetches the value and assigns it to the 
+    variable javaHome.
+
+Use Cases:
+(i) Reading Configuration: Fetch values like URLs, credentials, or file paths from application.properties 
+or application.yml.
+(ii) System Properties: Use system-level values like java.home or user.home.
+(iii) Default Values: Provide a fallback if the value is not set
+
+
+(b) We can even use the @Value annotation for expressions as:
+@Value("#{4*4}")
+private int multiply; // multiply will have 16 assigned to it

@@ -1,0 +1,75 @@
+9. Challenge:
+=================
+
+=> We did a loosely coupled example and in that we created the UserManager and UserDatabaseProvider objects.
+Challenge is to implement IoC in that example.
+
+1. Create an setup a quickstart maven project and add the spring dependencies (spring-core and spring-context).
+
+2. UserDataProvider interface:
+package com.example.loosecoupling;
+
+public interface UserDataProvider {
+	String getUserDetails();
+}
+
+3. UserDatabaseProvider class:
+package com.example.loosecoupling;
+
+public class UserDatabaseProvider implements UserDataProvider {
+
+	@Override
+	public String getUserDetails() {
+		return "User Details from the database";
+	}
+
+}
+
+4. UserManager class:
+package com.example.loosecoupling;
+
+public class UserManager {
+	private UserDataProvider userDataProvider;
+
+	public void setUserDataProvider(UserDataProvider userDataProvider) {
+		this.userDataProvider = userDataProvider;
+	}
+	
+	public String getUserInfo() {
+		return userDataProvider.getUserDetails();
+	}
+}
+
+
+5. applicationContext.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- bean definitions here -->
+    <bean id="userDatabaseProvider" class="com.example.loosecoupling.UserDatabaseProvider" />
+    
+    <bean id="userManagerBean" class="com.example.loosecoupling.UserManager">
+    	<property name="userDataProvider" ref="userDatabaseProvider" />
+    </bean>
+</beans>
+
+6. Main class:
+package com.example.main;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+import com.example.loosecoupling.UserManager;
+
+public class Main {
+	public static void main( String[] args )
+    {
+        ApplicationContext context = new ClassPathXmlApplicationContext("com/example/resources/applicationContext.xml");
+
+        UserManager userManager = (UserManager) context.getBean("userManagerBean");
+        System.out.println(userManager.getUserInfo());
+    }
+}

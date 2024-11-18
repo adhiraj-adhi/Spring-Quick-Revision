@@ -1,0 +1,27 @@
+=> Core Concepts of Spring Framework.txt
+===========================================
+
+(I) Inversion of Control (IoC):
+---------------------------------
+=> It is a design principle where the control of object creation and lifecycle management is transferred from
+the application code to an external container or framework.
+
+=> In the last example of loose coupling we saw that the object required by UserManger was created by the
+application code in LooseCoupling class. This is not the Inversion of Control.
+What if this requirement of object was handled by the container/framework itself? This would be IoC.
+
+
+(II) Dependency Injection (DI):
+----------------------------------
+=> It is a design pattern commonly used in object-oriented programming, where the dependencies of a class
+are provided externally rather than being created withing the class itself.
+
+=> In the last example of loose coupling, UserManger required (i.e. was dependent on) UserDataProvider type
+instance. But we were not creating the instance in UserManger itself. Instead, we were bringing it externally
+with the help of constructor of UserManger. This is basically injecting the dependency (using constructor).
+
+
+(III) Beans:
+---------------
+=> Objects that are managed by frameworks are known as Beans.
+=> Objects managed by the framework/container => Beans => IoC

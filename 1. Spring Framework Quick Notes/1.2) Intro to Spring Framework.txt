@@ -1,0 +1,23 @@
+=> Introduction to Spring Framework:
+================================================
+
+=> Initially developed by Rod Johnson in 2002.
+=> First version was released in March 2004. Since then, major developments and versions are released.
+=> Spring was developed with the aim to simplify the Java Enterprise Application development.
+
+=> Key principles of the Spring Framework:
+(a) Simplicity
+(b) Modularity
+(c) Testability
+
+=> Main key components (i.e. modules) of the Spring Framework:
+(a) Core Spring Framework
+(b) Spring Boot
+(c) Spring Data
+(d) Spring Cloud
+(e) Spring Security
+
+=> Use cases of Spring:
+(a) Enterprise Application Development
+(b) Microservices Architecture
+(c) Web Applications

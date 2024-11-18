@@ -1,0 +1,73 @@
+10. Autowiring and its types:
+==============================
+
+=> Automatically resolves and injects the dependencies between beans without requiring explicit wiring 
+definitions in configuration file. For instance, in the last challenge we dit explicit wiring of 
+UserDatabaseProvider bean in UserManager as:
+
+<bean id="userDatabaseProvider" class="com.example.loosecoupling.UserDatabaseProvider" />    
+<bean id="userManagerBean" class="com.example.loosecoupling.UserManager">
+    <property name="userDataProvider" ref="userDatabaseProvider" />
+</bean>
+
+=> Types of Autowiring:
+A. By Name: 
+---------------
+<!-- bean definitions here -->
+<bean id="userDataProvider" class="com.example.loosecoupling.UserDatabaseProvider" />
+<bean id="userManagerBean" class="com.example.loosecoupling.UserManager" autowire="byName" />
+
+Note: In this case two things are mandatory:
+    (i) Bean id for UserDatabaseProvider must be same as field name in UserManagers.
+    (ii) We must have setter method for the bean we are injecting (here UserDatabaseProvider) in the dependent
+        class i.e.
+        package com.example.loosecoupling;
+        public class UserManager {
+            private UserDataProvider userDataProvider;
+            
+            // this is must
+            public void setUserDataProvider(UserDataProvider userDataProvider) {
+                this.userDataProvider = userDataProvider;
+            }
+            
+            public String getUserInfo() {
+                return userDataProvider.getUserDetails();
+            }
+        }
+
+
+B. By Type:
+----------------
+ <!-- bean definitions here -->
+<bean id="weCanGiveAnyName" class="com.example.loosecoupling.UserDatabaseProvider" />
+<bean id="userManagerBean" class="com.example.loosecoupling.UserManager" autowire="byType" />
+
+Note: We must have setter method for the bean we are injecting (here UserDatabaseProvider) in the dependent.
+
+
+C. Constructor:
+----------------
+<!-- bean definitions here -->
+<bean id="anyName" class="com.example.loosecoupling.UserDatabaseProvider" />
+<bean id="userManagerBean" class="com.example.loosecoupling.UserManager" autowire="constructor" />
+
+Note: In this case we must have constructor for initialization in the dependent bean class i.e.
+package com.example.loosecoupling;
+public class UserManager {
+	private UserDataProvider userDataProvider;
+
+	// In this case we must have constructor for initialization.
+	public UserManager(UserDataProvider userDataProvider) {
+		this.userDataProvider = userDataProvider;
+	}
+
+
+
+	public String getUserInfo() {
+		return userDataProvider.getUserDetails();
+	}
+}
+
+
+=> Advantage of Autowiring: Spring manages the bean.
+=> Disadvantage of Autowiring: We loose control on bean.

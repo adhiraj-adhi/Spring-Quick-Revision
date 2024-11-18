@@ -1,0 +1,25 @@
+2.1) Introduction:
+===================
+
+=> Introduced in Java 5.
+
+=> Annotations provides a way to add metadata to our code. In simple it tells more about the code.
+
+=> One of the most common annotation that we used @Override.
+    (i) Using the @Override annotation we tell the complier that we are providing our own version of 
+    method defined in parent class.
+    (ii) This annotation also helps us to avoid errors while overriding.
+
+
+=> Commonly used Spring Annotation:
+(i) @Component:- Marks a Java class as a bean.
+(ii) @Autowired:- Used for autowiring the dependency.
+(iii) @Qualifier:- If there are multiple matching type than we can use this annotation to specify which bean 
+is to be matched.
+(iv) @Value:- To inject property values into our bean.
+(v) @RequestMapping
+(vi) @SpringBootApplication
+(vii) There are some special variations of @Component:
+    (a) @Repository: Used to define data repository.
+    (b) @Service: Used to indicate that the particular class is providing business services.
+    (c) @Controller

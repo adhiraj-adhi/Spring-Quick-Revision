@@ -1,0 +1,12 @@
+=> Spring Container and Configuration
+=======================================
+
+=> Spring Container:
+(a) It is used to manage the entire lifecycle of objects.
+(b) Types of Spring Containers:
+    (i) BeanFactory: It is simple container providing basic support for Dependency Injection.
+    (ii) ApplicationContext: It is more advanced than BeanFactory.
+
+
+=> (Q) How does Spring Container know whic objects to manage or in simple details of what to manage?
+We tell this to Spring Container with the help of Configuration file.

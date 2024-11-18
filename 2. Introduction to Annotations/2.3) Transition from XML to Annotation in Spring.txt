@@ -1,0 +1,16 @@
+2.3) Transition from XML to Annotation in Spring:
+===================================================
+
+=> We can replace XML configuration file with Java configuration file as:
+@Configuration  // Marks the class as configuration file
+@ComponentScan(basePackages = "com.adhi.beans") // specifying the packages to scan
+public class AppConfig {
+
+}
+
+Note: We can even specify multiple packages to scan as:
+@Configuration(basePackages = {"com.adhi.beans", "com.adhi.alpha", ...})
+
+
+=> When using Java configuration file we have to use AnnotationConfigApplicationContext in Main class as:
+ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);

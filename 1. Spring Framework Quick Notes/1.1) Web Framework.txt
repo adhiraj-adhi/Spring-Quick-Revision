@@ -1,0 +1,12 @@
+=> Why do we need it?
+(i) Websites have a lot in common say related to security, database, URLs, authentication and more.
+(ii) Building these common things every time from scratch can be tedious. This is where web frameworks come into picture.
+
+=> Web frameworks are nothing but collection of tools and modules that is needed to do standard tasks across web applications.
+
+=> Popular web frameworks:
+(a) Spring Boot framework (Java)
+(b) Django framework (Python)
+(c) Flask framework (Python)
+(d) ExpressJS framework (JavaScript)
+(e) Ruby on Rails framework (Ruby)

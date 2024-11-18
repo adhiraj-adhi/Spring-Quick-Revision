@@ -1,0 +1,21 @@
+=> Lifecycle of Bean
+========================
+
+(a) Bean Definition: A bean definition includes configuration metadata that the container needs to know to
+create and manage the bean.
+
+(b) Bean configuration:
+    (i) Bean Definition can be provided in various ways inclding XML config files, annotations, and Java-based
+    configuration.
+    (ii) Beans are configured using XML files, where each bean is defined within the <bean> tag with attributes
+    specifying class, properties, and dependencies.
+    (iii) Beans can be configured using annotations like @Components, @Service, @Repository, etc., which are
+    scanned by Spring and managed as beans.
+
+(c) Lifecycle of Bean:
+    (i) Instantiation: Bean instances is created using bean definitions.
+    (ii) Population of properties: Properties would be set on bean instance (either through setter method,
+    constructor, or field injection).
+    (iii) Initialization: Initialization related methods are invoked.
+    (iv) Bean is ready to use
+    (v) Destruction after use.

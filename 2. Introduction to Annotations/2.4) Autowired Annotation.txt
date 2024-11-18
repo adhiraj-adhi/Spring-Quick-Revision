@@ -1,0 +1,5 @@
+2.4) Autowired Annotation:
+===========================
+
+=> We can use the @Autowired annotation for autowiring. Using this annotation we can do autoworing in two ways:
+(i) Constructor Injection [Preferred]   (ii) Field Injection

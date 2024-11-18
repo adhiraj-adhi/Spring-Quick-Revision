@@ -1,0 +1,87 @@
+=> Setting Up Spring Project
+===============================
+
+(i) Create a Quick Start Maven Project.
+(ii) pom.xml file: It is used to add necessary dependencies in Maven Project. Earlier when Maven was not there
+we used to manually add required JAR files in the Project.
+
+(iii) Go to Maven Repository and add:
+    (a) Spring Core Dependency (say version 6.1.12)
+    (b) Spring Context Dependency
+
+That's all we are ready with Spring Project Setup.
+
+=> Creating our First Bean:
+-----------------------------
+(a) Create a package (say com.example.beans)
+(b) Create a Bean class (say MyBean) with the following code:
+package com.example.beans;
+
+public class MyBean {
+	private String message;
+
+	// setter method:
+	public void setMessage(String message) {
+		this.message = message;
+	}
+	
+	// to display message:
+	public void showMessage() {
+		System.out.println("Message: "+message);
+	}
+	
+	@Override
+	public String toString() {
+		return "MyBean {message = "+message+"}";
+		
+	}
+}
+
+
+(c) Creating the configuration file (XML-Based): We can create package for this config file (say 
+com.example.resources) and name the configuration file as applicationContext.xml. Get the boiler plate
+code for the Spring configuration file (we can get it from google in 40.2.1 section XSD based schema) and
+define our bean in the configuration file using <bean> as:
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- bean definitions here -->
+    <bean id="myBean" class="com.example.beans.MyBean"></bean>
+
+</beans>
+
+Note: In Intellij we have a resources folder that we can make use of for creating the configuration file.
+
+(d) Creating Main class (say in com.example.main package)
+package com.example.main;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+import com.example.beans.MyBean;
+
+public class Main 
+{
+    public static void main( String[] args )
+    {
+        ApplicationContext context = new ClassPathXmlApplicationContext("com/example/resources/applicationContext.xml");
+        
+        MyBean myBean = (MyBean) context.getBean("myBean");
+        System.out.println(myBean);
+    }
+}
+
+Note: If working in Intellij and created the config file in resources folder we are just required to specify
+the file name instead of complete config location in ClassPathXmlApplicationContext().
+
+Output of above code: MyBean {message = null} (Here, we have not set the message property so we got default value)
+
+
+(e) To set the message property we can do:
+<!-- bean definitions here -->
+<bean id="myBean" class="com.example.beans.MyBean">
+    <property name="message" value="First Bean" />
+</bean>
