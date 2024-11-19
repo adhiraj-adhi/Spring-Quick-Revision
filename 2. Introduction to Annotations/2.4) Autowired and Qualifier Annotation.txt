@@ -1,0 +1,116 @@
+2.4) Autowired and Qualifier Annotation:
+===========================
+
+=> We can use the @Autowired annotation for autowiring. Using this annotation we can do autoworing in two ways:
+(i) Constructor Injection [Preferred]   (ii) Field Injection
+
+=> Constructor Injection:
+---------------------------
+(a) Employee.java:
+package com.example.beans;
+
+import org.springframework.stereotype.Component;
+
+@Component
+public class Employee {
+	private int empId;
+	private String empName;
+	private double salary;
+	public void setEmpId(int empId) {
+		this.empId = empId;
+	}
+	public void setEmpName(String empName) {
+		this.empName = empName;
+	}
+	public void setSalary(double salary) {
+		this.salary = salary;
+	}
+	@Override
+	public String toString() {
+		return "empId=" + empId + ", empName=" + empName + ", salary=" + salary;
+	}	
+}
+
+(b) Manager.java:
+package com.example.beans;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class Manager {
+	private Employee anyName;
+	
+	@Autowired
+	public Manager(Employee employee) {
+		this.anyName = employee;
+	}
+
+	@Override
+	public String toString() {
+		return "Manager [employee=" + anyName + "]";
+	}
+}
+
+
+(c) AppConfig.java:
+package com.example.resources;
+
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@ComponentScan(basePackages = "com.example.beans")
+public class AppConfig {}
+
+(d) Main.java:
+package com.example.main;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import com.example.beans.Manager;
+import com.example.resources.AppConfig;
+
+public class Main 
+{
+    public static void main( String[] args )
+    {
+        ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+        
+        Manager manager = (Manager) context.getBean("manager");
+        System.out.println(manager);
+    }
+}
+
+
+=> Field Injection:
+--------------------
+Here, we use @Autowire for the field:
+package com.example.beans;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class Manager {
+	@Autowired
+	private Employee anyName;
+	
+	@Override
+	public String toString() {
+		return "Manager [employee=" + anyName + "]";
+	}
+}
+
+
+=====================================================================
+=> Qualifier Annotation:
+=====================================================================
+Suppose we are using @Autowired annotation but we have two beans than. For instance, in above example if we
+have two beans of Employee than the container will get confused and in that case we can make use of
+@Qualifier annotation as:
+
+@Autowired
+@Qualifier("nameOfBeanWeWantToBeAutowired")
+private Employee employee;
