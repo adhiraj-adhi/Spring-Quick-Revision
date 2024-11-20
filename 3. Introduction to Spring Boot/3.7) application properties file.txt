@@ -1,0 +1,17 @@
+3.7) application.properties file:
+====================================
+
+=> Used to do configuration in Spring Boot. If we do not specify any than default configuration is done. Here,
+we specify properties in key-value pairs.
+Example: server.port = 9090  -> Server will start at this port instead of default 8080 port.
+
+=> Example: Specifying DataSource related properties:
+spring.datasource.url = jdbc:mysql://localhost:3306/db
+spring.datasource.username = root
+spring.datasource.password = secret
+spring.jpa.hibernate.ddl-auto = update  -> This basically tells Spring Boot to automatically 
+                                           create or update the database schema as needed.
+
+=> Note: Properties written in application.properties file can be overridden by command line arguments. Say
+while running our Spring Boot application by command line we can specify: --server.port = 7070 and this will
+overridde port in properties file.

@@ -1,0 +1,27 @@
+3.2) Components and Advantages of Spring Boot:
+=================================================
+
+=> Components of Spring Boot:
+--------------------------------
+
+(i) Spring Boot Starters: Spring Boot provides starters for various purposes. Starters has necessary
+dependencies embedded into it. For example, Spring Boot Web Starter has necessary dependencies for Spring
+Boot Web Apps.
+
+(ii) AutoConfiguration: Spring Boot automatically configures our Spring application based on the dependencies
+added.
+
+(iii) Spring Boot Actuator: It is used for monitoring the application. It enables the production ready 
+features like monitoring our applications, matrix gathering, tracing a HTTP request, and so on.
+
+(iv) Spring Boot Dev Tools: Set of dev tools that enhances the productivity during application development.
+
+
+=> Advantages of Spring Boot:
+-------------------------------
+
+(i) Stand-Alone and Quick Start
+(ii) Starter Code: Starter projects that take care of configuration and dependencies.
+(iii) Less Configuration: As Spring Boot takes care of configuration so there's less need (or no need)
+of configuration.
+(iv) Reduced Cost and application development time.

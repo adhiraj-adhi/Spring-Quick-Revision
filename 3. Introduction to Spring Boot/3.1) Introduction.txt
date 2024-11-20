@@ -1,0 +1,24 @@
+3.1) Introduction:
+====================
+
+=> Open-source, freeware, Java-based framework used to create stand-alone, production-grade Spring-based
+applications.
+[How Stand-Alone??? Actually, in the context of the Spring Framework and Spring Boot, "stand-alone" means 
+that the application is self-contained and does not depend on an external application server to run. 
+This is achieved by embedding the application server directly into the application.]
+
+=> Spring vs Spring Boot:
+--------------------------------
+(a) Spring:
+    (i) Lots of steps involved in setting up, configuration, writing boilerplate code, deployment of the app.
+    (ii) Note: Spring reduced boilerplate code to some extent but still there is much boiler plate.
+    (iii) Note: To test our application we need to have a local server running on our system and we
+    have to setup that server.
+
+(b) Spring Boot:
+    (i) Offers a set of pre-configured components or defaults, and eliminates the need for a lot of
+    boilerplate code that was involved in setting up a Spring application.
+    (ii) Note: Spring Boot reduced boilerplate code to a lot more extent.
+    (iii) Note: Spring Boot has embedded server.
+
+(c) In short, Spring Boot = Spring Framework + Prebuilt Configuration + Embedded Server.

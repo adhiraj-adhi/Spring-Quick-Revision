@@ -1,0 +1,22 @@
+3.4) Spring Initializr:
+==========================
+
+=> It is tool used to generate a Spring Boot project with necessary starters. For this we can visit the 
+"start.spring.io" website or we can simply search for Spring Boot Initializr.
+
+=> Some terms to understand while generating projects via Spring Boot Initializr:
+(i) SNAPSHOT:  It represents a version of the software that is still in development and not yet a final 
+release. For example, 1.0.0-SNAPSHOT is a pre-release version of what will eventually become 1.0.0.
+
+(ii) Group: The Group is a unique identifier for the project, typically representing our organization's 
+domain name in reverse. Basically, it is package name.
+(iii) Artifact: The Artifact is the name of our project or module. It is the identifier for the specific 
+project within the group.
+(iv) Name: The Name is a human-readable name for our project. It often defaults to the Artifact value but 
+can be customized.
+
+(v) We can add dependencies based on our requirements (say we add Spring Web dependency).
+(vi) Explore: Gives a view of our project structure.
+
+Note: Under src/main/java all our Java files resides and under src/main/resources we have our properties
+files and user-facing things reside (like HTML, JSP, etc stuff).

@@ -1,0 +1,47 @@
+3.6) Creating our Hello World API:
+=====================================
+
+=> Once we download the Spring Initializr (with Spring Web Dependency) project and create a controller
+(say com.example.controllers.MyController) as:
+package com.example.controller;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class MyController {
+	@GetMapping("/hello")
+	public String hello() {
+		return "Hello World";
+	}
+}
+
+=> Note:
+----------
+(i) When we annotate our main class with @SpringBootApplication, it includes the functionality of 
+@ComponentScan, which scans for Spring components (like @Controller, @Service, @Repository, etc.) 
+starting from the package where the main class resides and all its subpackages.
+
+(ii) If our controller is in the same package as the main class or in a subpackage, there is no need 
+for an explicit @ComponentScan. Spring Boot will detect it automatically.
+
+(iii) If our controller is in a different package hierarchy (not a subpackage), we will need to use 
+@ComponentScan to tell Spring Boot where to look as:
+package com.example.HelloWorldBoot;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+
+@SpringBootApplication
+@ComponentScan(basePackages = "com.example.controller")
+public class HelloWorldBootApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(HelloWorldBootApplication.class, args);
+	}
+
+}
+
+
+=> Note: Here, Spring Boot does auto configuration such as mapping the controller to DispatcherServlet,
+creation of bean for MyController class (since we used @RestController annotation), and so on.

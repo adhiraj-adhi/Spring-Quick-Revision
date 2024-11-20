@@ -1,0 +1,16 @@
+3.5) Some annotations and Dependencies in Spring Boot:
+========================================================
+
+=> Some annotations:
+-----------------------
+(i) @SpringBootApplication: Marks the class that it is Spring Boot Application.
+(ii) @SpringBootConfiguration: Tells that this is config file.
+(iii) @EnableAutoConfiguration: To enable auto config for the project.
+
+
+=>  Dependencies in Spring Boot:
+----------------------------------
+(i) Apart from the Spring Boot dependencies we can add some third party dependencies also.
+(ii) We can include third party dependencies (i.e. dependencies not provided by Spring Boot) per our 
+requirement from Maven Central (We are using Maven Central because our project is Maven based).
+(iii) We can even create and update our dependencies on Maven Central.

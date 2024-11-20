@@ -1,0 +1,17 @@
+3.9) Making use of Path Variable (@PathVariable):
+===================================================
+
+=> Path Variable: Used to extract param (i.e. dynamic element) from URL. These dynamic elements are 
+placeholders in the URL path that can change for different requests. We use @PathVariable for this.
+
+=> Example:
+@GetMapping("/hello/{username}")
+public HelloResponse hello(@PathVariable String username) {
+	/* Note: Here, name of dynamic field in URL (here, {username}) and name of 
+	 * Path Variable must be same
+	 */
+	return new HelloResponse("Hello "+username);
+}
+
+=> Note: We can also have dynamic element between two static part of URL say as:
+@GetMapping("/hello/{username}/show")

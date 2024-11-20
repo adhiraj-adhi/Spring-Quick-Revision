@@ -1,0 +1,59 @@
+3.8) Task and JSON Response:
+==============================
+
+=> Task:
+----------
+Create a POST request and get the response in POSTMAN. Also pass some data from POSTMAN (i.e. use 
+@RequestBody annotation). Send raw data as text from POSTMAN (not as JSON).
+
+We can add the following code in MyController.java:
+@PostMapping("/hello")
+public String printHello(@RequestBody String name) {
+	return "Hello "+name;
+}
+
+
+
+=> JSON Response:
+-------------------
+(i) Getting JSON Response:
+(a) First we will create a bean class say com.example.beans.HelloResponse as:
+package com.example.beans;
+
+public class HelloResponse {
+	private String message;
+
+	public HelloResponse(String message) {
+		this.message = message;
+	}
+	
+	public String getMessage() {  
+		// this getter method is must as Jackson uses it for the conversion
+		return message;
+	}
+}
+
+(b) Next we have to create controller as:
+package com.example.controller;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.beans.HelloResponse;
+
+@RestController
+public class MyController {
+	@GetMapping("/hello")
+	public HelloResponse hello() {
+		return new HelloResponse("Hello JSON"); 
+        // Here we can use @Component and autowiring or manual Bean Configuration using config file also
+	}
+}
+
+(Q) What is Jackson?
+Actually, the automatic conversion to JSON is done by HTTP message converters and Jackson is default message 
+converter. We can see it added as dependencies in Maven Dependencies of our Maven Project.
+
+
+
+(ii) Similary we can do for POST request by sending the raw data as JSON using POSTMAN.
