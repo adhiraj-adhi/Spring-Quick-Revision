@@ -1,0 +1,121 @@
+3.10) ResponseEntity and RequestMapping annotation:
+=====================================================
+
+(I) ResponseEntity:
+----------------------
+
+=> ResponseEntity is a class in Spring Framework that represents the entire HTTP response, including 
+the status code, headers, and body. It allows us to have complete control over the response returned 
+to the client. It is part of org.springframework.http package.
+
+=> HttpStatus: It is an enumeration in Spring that represents various HTTP response status codes. It 
+is part of the org.springframework.http package and provides a standardized way to indicate the result 
+of an HTTP request.
+
+
+=> Commonly used status code and the corresponding fields in HttpStatus enum:
+(i) 200 -> HttpStatus.OK -> The request was successful.
+(ii) 201 -> HttpStatus.CREATED -> Resource created successfully.
+(iii) 204 -> HttpStatus.NO_CONTENT -> Request processed successfully, but no content to return.
+(iv) 400 -> HttpStatus.BAD_REQUEST -> Client sent an invalid request.
+(v) 401 -> HttpStatus.UNAUTHORIZED -> Authentication is required or has failed.
+(vi) 403 -> HttpStatus.FORBIDDEN -> The client is not allowed to access the requested resource.
+(v) 404 -> HttpStatus.NOT_FOUND -> The requested resource is not found.
+(vi) 500 -> HttpStatus.INTERNAL_SERVER_ERROR -> The server encountered an error while processing the request.
+(vii) 503 -> HttpStatus.SERVICE_UNAVAILABLE -> The server is temporarily unable to handle the request 
+    (e.g., maintenance).
+
+=> Example: In this example, Jobs is the Bean class.
+@GetMapping("/jobs")
+public ResponseEntity<List<Jobs>> findAll() {
+	return new ResponseEntity<>(jobService.findAllServices(), HttpStatus.OK);
+}
+
+=> Example: In this example, Jobs is the Bean class.
+@PostMapping("/jobs")
+public ResponseEntity<String> createJob(@RequestBody Jobs job) {
+	return new ResponseEntity<>(jobService.createJobServices(job), HttpStatus.CREATED);
+}
+
+
+=> We can even use status() method for specifying the status as:
+@GetMapping("/not-found")
+public ResponseEntity<String> notFoundResponse() {
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                         .body("The resource you are looking for was not found!");
+}
+
+
+=> Instead of specifying status explicitly we can use the corresponding factory methods like ok(), created(), 
+accepted(), etc., as:
+@GetMapping("/jobs")
+public ResponseEntity<List<Jobs>> findAll() {
+	return ResponseEntity.ok(jobService.findAllServices());
+}
+
+=> We can make use of body() to send the response content as:
+@GetMapping("/jobs")
+public ResponseEntity<List<Jobs>> findAll() {
+	return ResponseEntity.ok().body(jobService.findAllServices());
+    // Here, ok() is for status and body() is for response
+}
+
+
+=> We can also add custom headers to the response:
+i) Adding a single header:
+@GetMapping("/custom-header")
+public ResponseEntity<String> customHeaderResponse() {
+    return ResponseEntity.ok()
+            .header("X-Custom-Header", "CustomHeaderValue")
+            .body("Response with custom header");
+}
+
+ii) Adding multiple headers: We can make use of HttpHeaders class as:
+@GetMapping("/custom-headers")
+public ResponseEntity<String> responseWithHeaders() {
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("X-Custom-Header", "HeaderValue1");
+    headers.add("X-Another-Header", "HeaderValue2");
+    
+    return new ResponseEntity<>("Response with multiple headers", headers, HttpStatus.ACCEPTED);
+}
+
+
+=> Sending empty response:
+@DeleteMapping("/delete")
+public ResponseEntity<Void> deleteResource() {
+    // Perform deletion logic here
+    return ResponseEntity.noContent().build();
+}
+
+
+(II) RequestMapping annotation:
+----------------------------------
+=> We can use this annotation with the method as:
+@RequestMapping(value = "/get", method = RequestMethod.GET)
+public String getUser() {
+    return "GET User";
+}
+
+@RequestMapping(value = "/create", method = RequestMethod.POST)
+public String createUser() {
+    return "POST Create User";
+}
+
+=> We can use this annotation with the class as:
+@RestController
+@RequestMapping("/api")
+public class MyController {
+    @RequestMapping(value = "/hello", method = RequestMethod.GET)
+    public String sayHello() {
+        return "Hello, World!";
+    }
+
+    @RequestMapping(value = "/goodbye", method = RequestMethod.POST)
+    public String sayGoodbye() {
+        return "Goodbye, World!";
+    }
+}
+
+Here, @RequestMapping("/api") applies to all methods in the controller i.e. sayHello() is handler method 
+for "/api/hello", and sayGoodbye() is handler method for "/api/goodbye".
