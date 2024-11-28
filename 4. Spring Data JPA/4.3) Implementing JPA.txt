@@ -1,0 +1,174 @@
+(4.3) Implementing JPA:
+===========================
+
+(I) Create a Bean class and mark it with @Entity annotation. Also provide the name of table using @Table 
+annotation (optional). Mark the fields of bean with @Id and @Column (if we do not mark the fields with 
+@Column annotation then column with the field name is created) annotation as per use.
+Note: JPA requires every entity class to have a public or protected no-argument (default) constructor. So,
+    if we are creating any custom constructor we have to make sure we define default constructor. The 
+    persistence provider (e.g., Hibernate) uses reflection to create instances of entity classes. 
+    Reflection can only instantiate a class if a no-argument constructor exists. If a default constructor is
+    not present, we might encounter an error like: HibernateException or InstantiationException.
+
+
+=> Reflection in Java: 
+(i) Reflection is a feature in Java that allows a program to inspect and manipulate 
+classes, methods, fields, and other components of the Java runtime environment at runtime. It provides 
+the ability to access metadata about classes and objects, and even modify their behavior dynamically.
+(ii) Reflection allows us to inspect classes, access and modify fields and methods, and instantiate 
+objects dynamically.
+
+=> Code:
+package com.abhi.main.jobs.beans;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+@Entity
+public class Jobs {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
+	private String title;
+	private String description;
+	private double minSalary;
+	private double maxSalary;
+	private String location;	
+	
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public double getMinSalary() {
+		return minSalary;
+	}
+	public void setMinSalary(double minSalary) {
+		this.minSalary = minSalary;
+	}
+	public double getMaxSalary() {
+		return maxSalary;
+	}
+	public void setMaxSalary(double maxSalary) {
+		this.maxSalary = maxSalary;
+	}
+	public String getLocation() {
+		return location;
+	}
+	public void setLocation(String location) {
+		this.location = location;
+	}
+}
+
+
+
+
+(II) Creating a interface extending JpaRepository:
+=> Code:
+package com.abhi.main.jobs.dao;
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.abhi.main.jobs.beans.Jobs;
+public interface JobsRepository extends JpaRepository<Jobs, Integer> {}
+
+=> Note: We do not need to explicitly mark the repository interface with @Repository when using Spring 
+Data JPA and extending JpaRepository because Spring Data JPA automatically detects and registers 
+interfaces that extend JpaRepository (or other Spring Data repository interfaces like CrudRepository, 
+PagingAndSortingRepository) as beans in the Spring application context.
+
+=> Using the JpaRepository has made us free from writing or defining the interface with DAO methods and
+implementing them. We can directly use the repository interface. However, for complex operations we may
+require to define abstract methods and implement them.
+
+
+(III) Using the repository interface in the service class:
+package com.abhi.main.jobs.services;
+
+import java.util.List;
+import java.util.Optional;
+import org.springframework.stereotype.Service;
+import com.abhi.main.jobs.beans.Jobs;
+import com.abhi.main.jobs.dao.JobsRepository;
+
+@Service
+public class JobsServiceImpl implements JobsService {
+	private JobsRepository jobsRepository;
+	
+//	@Autowired - No need of this
+	public JobsServiceImpl(JobsRepository jobsRepository) {
+		this.jobsRepository = jobsRepository;
+	}
+
+	@Override
+	public List<Jobs> findAllServices() {
+		return jobsRepository.findAll();
+	}
+
+	@Override
+	public String createJobServices(Jobs job) {
+		jobsRepository.save(job);
+		return "Job created successfully";
+	}
+
+	@Override
+	public Jobs getAJobServices(int id) {
+		return jobsRepository.findById(id).orElse(null);
+		// Note: findById(id) return an Optional object with the Job with given id (if exists)
+	}
+
+	@Override
+	public boolean updateJobServices(int id, Jobs newJob) {
+		Optional<Jobs> opt_job = jobsRepository.findById(id);
+		if(opt_job.isPresent()) {
+			Jobs job = opt_job.get();
+			if(newJob.getId()!=0) job.setId(newJob.getId());
+			if(newJob.getTitle()!=null) job.setTitle(newJob.getTitle());
+			if(newJob.getDescription()!=null) job.setDescription(newJob.getDescription());
+			if(newJob.getMinSalary()!=0.0) job.setMinSalary(newJob.getMinSalary());
+			if(newJob.getMaxSalary()!=0.0) job.setMaxSalary(newJob.getMaxSalary());
+			if(newJob.getLocation()!=null) job.setLocation(newJob.getLocation());
+            
+			// Do not forget to save:
+			jobsRepository.save(job);
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean deleteJobServices(int id) {
+		try {
+			jobsRepository.deleteById(id);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+}
+
+
+(IV) Adding the properties to application.properties file:
+=> Properties to add:
+spring.datasource.url=jdbc:h2:mem:testdb  -> In the browser console we have to provide this in JDBC URL.
+spring.datasource.username=sa
+spring.datasource.password=password -> If we do not specify this than we will have no password
+spring.h2.console.enabled=true
+spring.jpa.hibernate.ddl-auto=update
+
+=> Note: We can use the spring.jpa.show-sql=true property to see the SQL queries on the console of our IDE.
+
+=> Note: Once we start the application, our table will be created.

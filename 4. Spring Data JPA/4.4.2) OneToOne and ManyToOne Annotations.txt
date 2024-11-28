@@ -1,0 +1,290 @@
+(4.4.1) OneToOne and ManyToOne Annotations (Part II):
+======================================================
+
+(I) OneToMany:
+----------------------------------------------------------------------------------------------------------
+=> Example: A department has many employees (OneToMany). On the other side, many employee has only one 
+department (ManyToOne).
+=> Similary we can think for category (say Electronics) and Products of an E-commerce application.
+=> For this we use @OneToMany and @ManyToOne annotations.
+
+
+(II) Code:
+-------------
+
+=> Create two bean classes (Department and Student) as follows:
+
+(a) Department.java class:
+package com.example.relationship.beans;
+
+import java.util.List;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+
+@Entity
+public class Department {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int deptId;
+	private String deptName;
+	
+	
+	@OneToMany(mappedBy = "department") // One Department have many employees
+    // Using mappedBy here only creates foriegn key column with department id in employee table.
+	private List<Employee> employee;
+	
+	
+	public List<Employee> getEmployee() {
+		return employee;
+	}
+	public void setEmployee(List<Employee> employee) {
+		this.employee = employee;
+	}
+	public int getDeptId() {
+		return deptId;
+	}
+	public void setDeptId(int deptId) {
+		this.deptId = deptId;
+	}
+	public String getDeptName() {
+		return deptName;
+	}
+	public void setDeptName(String deptName) {
+		this.deptName = deptName;
+	}
+}
+
+(b) Employee.java class:
+package com.example.relationship.beans;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+
+@Entity
+public class Employee {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int empId;
+	private String empName;
+	private double empSal;
+	
+	@ManyToOne  // Many Employee can have one department
+    // We can use @JoinColumn here to specify custom column name
+	private Department department;
+	
+	public Department getDepartment() {
+		return department;
+	}
+	public void setDepartment(Department department) {
+		this.department = department;
+	}
+	public int getEmpId() {
+		return empId;
+	}
+	public void setEmpId(int empId) {
+		this.empId = empId;
+	}
+	public String getEmpName() {
+		return empName;
+	}
+	public void setEmpName(String empName) {
+		this.empName = empName;
+	}
+	public double getEmpSal() {
+		return empSal;
+	}
+	public void setEmpSal(double empSal) {
+		this.empSal = empSal;
+	}
+}
+
+
+=> Some important case studies:
+Case (a): What if we only specify @OneToMany mapping in Department class i.e. we have the following in 
+Department class:
+@OneToMany
+private List<Employee> employee;
+	
+public List<Employee> getEmployee() {
+	return employee;
+}
+public void setEmployee(List<Employee> employee) {
+	this.employee = employee;
+}
+
+But, in Employe class we do not have field related to Department i.e.:
+@Entity
+public class Employee {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int empId;
+	private String empName;
+	private double empSal;
+	
+	// Getters and setters
+}
+
+-> In this case we are doing one directional mapping so we will have one separate table created with name 
+department_employee. This table will have two columns one storing employee ids and the other storing the 
+corresponding department id.
+
+
+Case (b): Bidirectional mapping using @OneToMany and @ManyToOne (or in other words we can say that what if 
+we do not use mappedBy for bidirectional mapping here?):
+
+@Entity
+public class Department {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int deptId;
+	private String deptName;
+	
+	@OneToMany
+	private List<Employee> employee;
+	
+	// Getters and setters
+}
+
+
+@Entity
+public class Employee {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int empId;
+	private String empName;
+	private double empSal;
+	
+	@ManyToOne(cascade = CascadeType.ALL)
+	private Department department;
+	
+	// Getters and setters
+}
+
+-> In this case we will have everything as Case (a).
+
+
+
+=> Create an DepartmentRepository:
+package com.example.relationship.dao;
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.relationship.beans.Department;
+public interface DepartmentRepository extends JpaRepository<Department, Integer> {
+}
+
+
+=> Now to create only Department object:
+@RestController
+public class MyController {
+	@Autowired
+	private DepartmentRepository dptRepository;
+	
+	@GetMapping("/hello")
+	public String getHello() {
+		Department department = new Department();
+		department.setDeptName("Development");		
+		
+        dptRepository.save(department);
+		
+		return "Hello";
+	}
+}
+
+=> If we want to create Employee also then we can create the EmployeeRepository or use the Cascading 
+in Department class (we are using in Department class since it is parent class) as:
+@OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+private List<Employee> employee;
+
+=> Now creating both Department and Employee:
+@GetMapping("/hello")
+public String getHello() {
+	Department department = new Department();
+	department.setDeptName("AIML");
+		
+	Employee emp = new Employee();
+	emp.setEmpName("Adhiraj");
+	emp.setEmpSal(10000);
+	emp.setDepartment(department);
+	
+		
+	List<Employee> emp_list = new ArrayList<Employee>();
+	emp_list.add(emp);
+	department.setEmployee(emp_list);
+		
+	dptRepository.save(department);
+		
+	return "Hello";
+}
+
+=> Saving a new employee to existing department:
+(a) For this we can make use of JPQL directly or else we can use the Spring Data JPA provided naming 
+conventions which helps derive queries directly:
+    (i) Using JPQL:
+    @Repository
+    public interface DepartmentRepository extends JpaRepository<Department, Long> {
+        @Query("SELECT d FROM department d WHERE d.dept_name = :deptName")
+        Department findByDeptName(@Param("deptName") String deptName);
+    }
+
+    (ii) Using naming conventions:
+    @Repository
+    public interface DepartmentRepository extends JpaRepository<Department, Long> {
+        Department findByDeptName(String deptName); 
+        // Here, name of the method should be findByFieldNameInPascalCase()
+    }
+
+(b) Now, in MyController:
+@GetMapping("/new")
+public void retrieve() {
+	Employee emp = new Employee();
+	emp.setEmpName("Abhi");
+	emp.setEmpSal(20000);
+
+	Department dept = dptRepository.findByDeptName("AIML");
+	if(dept!=null) {
+		emp.setDepartment(dept);
+		List<Employee> newEmp = new ArrayList<Employee>();
+		newEmp.add(emp);
+		dept.setEmployee(newEmp);
+	
+		dptRepository.save(dept);
+	}
+}
+
+=> Retrieving all the employees of a department:
+@GetMapping("/retrieveAllInADept")
+public List<Employee> retrieveAllEmpInADept() {
+	Department dept = dptRepository.findByDeptName("AIML");
+	List<Employee> allEmp = dept.getEmployee();
+	return allEmp;
+}
+
+But, here we have a problem that when we search for employee based on department then for each employee
+we have department field so department will be searched and then again for each department we have
+employees, and so on. That is the Department entity contains a list of Employee entities and each
+Employee entity contains a reference back to the Department. In this way we have an infinite cycle in 
+response. To break the cycle, we can annotate one side of the relationship with @JsonIgnore to prevent 
+it from being included in the JSON serialization.
+
+(a) Say we annotate in Employee class as:
+@ManyToOne
+@JsonIgnore
+private Department department;
+
+Than o/p of above retrieveAllEmpInADept() handler is:
+[{"empId":2,"empName":"Adhiraj","empSal":10000.0},{"empId":3,"empName":"Abhi","empSal":20000.0}]
+
+(b) Say we annotate in Department class as:
+@OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+@JsonIgnore
+private List<Employee> employee;
+
+Than o/p of above retrieveAllEmpInADept() handler is:
+[{"empId":2,"empName":"Adhiraj","empSal":10000.0,"department":{"deptId":3,"deptName":"AIML"}},
+{"empId":3,"empName":"Abhi","empSal":20000.0,"department":{"deptId":3,"deptName":"AIML"}}]

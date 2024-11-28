@@ -1,0 +1,267 @@
+(4.4.3) ManyToMany and JsonIgnore Annotation
+=================================================
+
+(I) ManyToMany annotation: 
+-----------------------------
+
+=> Just for example purpose let us assume that one department can have multiple employees and vice versa.
+Case (i): Unidirectional Mapping: When not using mappedBy and using only the @ManyToMany annotation, for 
+one bean as:
+@Entity
+public class Employee {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int empId;
+	private String empName;
+	private double empSal;
+	
+	@ManyToMany
+	private List<Department> department;
+	
+	// Getters and setters
+}
+
+
+@Entity
+public class Department {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int deptId;
+	private String deptName;
+	
+	// Getters and setters
+}
+
+In this case, only one side of the relationship is responsible for managing and declaring the association,
+and the other side is unaware of the relationship. This approach can be simpler and is useful when we don't 
+need to navigate the relationship from both entities (for instance here we cannot navigate from Department
+to Employee). Also, we will have three tables created as: department, employee, and employee_department.
+
+(Q) What if we would have used @ManyToMany annotation in Department class instead of Employee class?
+-> Then Department side would be managing the relationship and we would have three tables created as: 
+department, employee, and department_employee.
+
+
+
+
+Case (ii): Bidirectional Mapping: When not using mappedBy and using only the @ManyToMany annotation, for 
+both bean as:
+@Entity
+public class Employee {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int empId;
+	private String empName;
+	private double empSal;
+	
+	@ManyToMany
+	private List<Department> department;
+}
+
+@Entity
+public class Department {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int deptId;
+	private String deptName;
+	
+	@ManyToMany
+	private List<Employee> employee;
+}
+
+In this case, where both sides of the bidirectional relationship are annotated with @ManyToMany but 
+mappedBy is not used, JPA will treat both sides as owning sides. This leads to two join tables being 
+created instead of one, which we know is not the intended behavior for a proper bidirectional relationship.
+Four tables created would be: employee, department, employee_department, and department_employee.
+
+
+=> Case (iii): Bidirectional manpping with mappedBy attribute:
+@Entity
+public class Department {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int deptId;
+	private String deptName;
+	
+	
+	@ManyToMany(mappedBy = "department")
+	private List<Employee> employee;
+}
+
+@Entity
+public class Employee {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int empId;
+	private String empName;
+	private double empSal;
+	
+	@ManyToMany
+	private List<Department> department;
+}
+
+The Employee class owns the relationship and defines the join table (employee_department). The Department 
+class refers to this mapping with mappedBy = "department", indicating that the Employee entity is managing 
+the relationship. This setup ensures only one join table is created, and Hibernate can correctly manage 
+the relationship from either side. So, total of three tables will be created with bidirectional mapping 
+as: employee, department, and employee_department. Here, employee is the managing/owning side and in 
+bidirectional relationships, it's generally recommended to manage the relationship from the owning 
+side (in this case, Employee), so we will create EmployeeRepository. Alse, it makes sense to apply 
+cascade on the owning side since this side controls the relationship and is responsible for persisting it
+(or in other words, owning side should handle the propagation of persistence operations). So in Employee,
+we will do:
+@ManyToMany(cascade = CascadeType.ALL)
+private List<Department> department;
+
+
+=> Creating one Employee object (assuming we have defined EmployeeRepository):
+@RestController
+public class MyController {
+	@Autowired
+	private EmployeeRepository empRepository;
+	
+	@GetMapping("/hello")
+	public String getHello() {
+		// Creating one employee:
+		Employee emp = new Employee();
+		emp.setEmpName("Adhiraj");
+		emp.setEmpSal(10000);
+		
+		empRepository.save(emp);
+		
+		return "Hello";
+	}
+}
+
+
+=> Retrieving all department in which a particular employee (say with id 3) is working. Do not forget to 
+use @JsonIgnore annotation or else we will lend into an infinite loop.
+@GetMapping("/retrieve")
+public List<Department> retrieve() {
+	// Retrieving all department in which a particular employee (say with id 3) is working:
+	
+	Employee employee = empRepository.findById(3).orElse(null);
+	List<Department> dpt = employee.getDepartment();
+	return dpt;
+}
+
+
+=> However, since we have Many-to-Many relationship, it is usually better practice to create and 
+associate both entities before saving as an Employee and a Department are related, saving one without 
+the other in a Many-to-Many setup may result in incomplete data or broken relationships in the database.
+
+=> To save one employee and one department:
+@Autowired
+private EmployeeRepository empRepository;
+	
+@GetMapping("/hello")
+public String getHello() {
+	// Creating one employee and one department
+	
+	Department dpt = new Department();
+	dpt.setDeptName("Development");
+	
+	Employee emp = new Employee();
+	emp.setEmpName("Adhiraj");
+	emp.setEmpSal(10000);
+		
+	List<Employee> emp_list = new ArrayList<>();
+	emp_list.add(emp);
+	dpt.setEmployee(emp_list);
+	
+	List<Department> dpt_list = new ArrayList<>();
+	dpt_list.add(dpt);
+	emp.setDepartment(dpt_list);
+	
+	empRepository.save(emp);
+	
+	return "Hello";
+}
+
+
+=> To save multiple employees and multiple department:
+@GetMapping("/hello")
+public String getHello() {
+	// Creating one employee and one department
+	
+	Department dpt1 = new Department();
+	dpt1.setDeptName("AIML");
+	
+	Department dpt2 = new Department();
+	dpt2.setDeptName("Data Engineer");
+	
+	Employee emp1 = new Employee();
+	emp1.setEmpName("Abhi");
+	emp1.setEmpSal(10000);
+	
+	Employee emp2 = new Employee();
+	emp2.setEmpName("Raj");
+	emp2.setEmpSal(20000);
+	
+	List<Employee> emp_list = new ArrayList<>();
+	emp_list.add(emp1);
+	emp_list.add(emp2);
+	dpt1.setEmployee(emp_list);
+	dpt2.setEmployee(emp_list);
+	
+	List<Department> dpt_list = new ArrayList<>();
+	dpt_list.add(dpt1);
+	dpt_list.add(dpt2);
+	emp1.setDepartment(dpt_list);
+	emp2.setDepartment(dpt_list);
+	
+	empRepository.save(emp1);
+	empRepository.save(emp2);
+	
+	return "Hello";
+}
+
+
+(II) JsonIgnore annotation:
+-------------------------------
+
+=> The @JsonIgnore annotation is used to ignore a property during the process of converting an object to 
+JSON. This is useful in preventing circular references or avoiding exposing sensitive information in the 
+serialized JSON output.
+
+=> If we have a bi-directional relationship (e.g., Department and Employee), we may end up with circular 
+references. By applying @JsonIgnore to one of the fields, you can avoid this issue.
+
+=> Example:
+@Entity
+public class Department {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+
+    // One department can have many employees
+    @OneToMany(mappedBy = "department")
+    @JsonIgnore  // Ignore this field during JSON serialization
+    private List<Employee> employees = new ArrayList<>();
+
+    // Getters and Setters
+}
+
+@Entity
+public class Employee {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+
+    // Many employees belong to one department
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private Department department;
+
+    // Getters and Setters
+}
+
+=> In this example:
+    (a) The @JsonIgnore annotation is applied to the employees field in the Department class. This 
+    prevents the list of employees from being included in the JSON serialization when the Department 
+    object is serialized to JSON.
+    (b) This can be useful to avoid infinite loops in serialization, especially when dealing with 
+    circular references between entities (e.g., a Department has Employees, and each Employee has a 
+    reference to a Department).

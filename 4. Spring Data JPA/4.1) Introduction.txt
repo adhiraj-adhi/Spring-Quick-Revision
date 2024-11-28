@@ -1,0 +1,78 @@
+(4.1) Introduction:
+==========================
+
+=> What is JPA?
+(i) Java Persistence API (JPA) is a specification in Java for managing relational data in applications using 
+object-relational mapping (ORM).
+(ii) It provides a standardized approach to interact with databases by mapping Java objects to database 
+tables.
+(iii) Supports JPQL (Java Persistence Query Language) and native SQL queries.
+(iv) Note: JPA is not a framework; it’s a specification.
+(v) Spring provides the Spring Data JPA library to integrate JPA into our project. Spring Data JPA reduces 
+boilerplate code and provides repository abstractions for easier data access. So we have to add the Spring 
+Data JPA dependency.
+
+=> NOTE:
+----------
+There may be a chance that we are adding the dependency in the project after the project creation. In that 
+case, there may be a chance of dependencies version conflict. To avoid this one way we can follow is the 
+following:
+(i) See the Spring Boot version in project we are using.
+(ii) Go to Spring Initializr and select the Maven project (assuming our project is Maven based) and specify 
+the same verssion of Spring Boot as that in the Spring Boot in project.
+(iii) In the dependency add the dependency (say Spring Data JPA).
+(iv) Go to Explore option and from pom.xml file copy the dependecy (say Spring Data JPA) and paste in 
+pom.xml in our project.
+
+
+=> Implemnting JPA:
+--------------------
+(i) We will create an interface and use JpaRepository.
+(ii) JpaRepository:
+    (a) The JpaRepository interface is part of the Spring Data JPA module and is child of 
+    PagingAndSortingRepository which in turn is a child of CrudRepository.
+    (b) CrudRepository - Provides basic CRUD functionality (save, findById, deleteById, etc.).
+    (c) PagingAndSortingRepository - Adds methods for pagination and sorting.
+    (d) JpaRepository - Along with the methods of CrudRepository and PagingAndSortingRepository, this 
+    interface adds JPA-specific 
+    methods such as flush, saveAndFlush, etc.
+    (e) Commonly Used JpaRepository Methods:
+        -> CRUD Operations
+            save(S entity) - Saves or updates an entity in the database.
+            findById(ID id) - Retrieves an entity by its ID.
+            findAll() - Fetches all entities.
+            deleteById(ID id) - Deletes an entity by its ID.
+            deleteAll() - Deletes all entities from the database.
+        -> Pagination and Sorting
+            findAll(Pageable pageable) - Fetches entities in a paginated format.
+            findAll(Sort sort) - Fetches all entities in a sorted order.
+            findAll(Pageable pageable, Sort sort) - (Combined)	Applies both pagination and sorting.
+        -> JPA-Specific Operations
+            flush() - Synchronizes the persistence context to the database.
+            saveAndFlush(S entity) - Saves an entity and immediately flushes changes to the database.
+            getOne(ID id) - Retrieves a reference to an entity (lazy-loaded, might throw an exception if 
+            accessed and not found).
+    (f) Note: JpaRepository provides basic methods and for complex operations we may still need to write SQL.
+(iii) Syntax: JpaRepository<entity-name>, <primar-key-type>
+(iv) Using annotations:
+    (a) @Entity Annotation - Marks a class as a database entity. Each entity corresponds to a row in database.
+    (b) @Table Annotation - Specifies the table name (if not specified then default is the class name).
+        Syntax: @Table(name = "employees")
+    (c) @Column Annotation - Maps a field to a specific database column.
+        Example:-
+        @Column(name = "employee_name", nullable = false)
+        private String name;
+    (d) Id and GeneratedValue - Defines the primary key and its generation strategy.
+        Example:
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+
+=> For complex queries we can use JPQL and Native Query:
+(i) JPQL - A query language for JPA entities.
+@Query("SELECT e FROM Employee e WHERE e.name = :name")
+List<Employee> findByName(@Param("name") String name);
+
+(ii) Native Query - SQL queries executed directly on the database.
+@Query(value = "SELECT * FROM employees WHERE name = :name", nativeQuery = true)
+List<Employee> findByNameNative(@Param("name") String name);
