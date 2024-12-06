@@ -1,0 +1,58 @@
+(4.5) findBy method in repository:
+===================================
+
+=> Method Name-Based Query Generation:
+(i) The prefix findBy indicates that we are attempting to find an entity by a specific property or 
+set of properties.
+(ii) Spring Data JPA will automatically generate a query that searches for an entity based on the 
+method's parameters, using the property names of the entity class.
+(iii) The parameters in the method signature (after findBy) are interpreted as fields of the entity, 
+and Spring will create the corresponding query.
+
+=> How it works?
+(i) Basic Example:
+public interface UserRepository extends JpaRepository<User, Long> {
+    List<User> findByUsername(String username);
+}
+
+In this case, Spring Data JPA will automatically create a query to search the User entity by the username 
+field.
+
+(ii) Multiple Conditions: We can chain multiple fields together by adding And, Or, etc., between field 
+names in the method.
+List<User> findByUsernameAndEmail(String username, String email);
+This method will generate a query similar to: SELECT * FROM user WHERE username = ? AND email = ?
+
+(iii) Field Name Matching: The part after findBy should match the names of the fields in the entity class. 
+For example, if we have an entity User with fields firstName and lastName, we could use:
+List<User> findByFirstNameAndLastName(String firstName, String lastName);
+
+(iv) Support for Like, GreaterThan, LessThan, etc.: We can use keywords in the method name to define 
+more complex queries.
+List<User> findByUsernameLike(String usernamePattern);
+This method would search for users whose usernames match a specific pattern (similar to SQL’s LIKE).
+
+(v) We can also use comparison operators like GreaterThan, LessThan, Between, etc.:
+List<User> findByAgeGreaterThan(Integer age);
+
+
+=> Examples of Queries Based on Method Names:
+(i) Using Logical AND:
+List<User> findByUsernameAndEmail(String username, String email);
+// Generated query: SELECT * FROM user WHERE username = ? AND email = ?;
+
+(ii) Using Comparison Operators:
+List<User> findByAgeGreaterThan(Integer age);
+// Generated query: SELECT * FROM user WHERE age > ?;
+
+(iii) Using LIKE:
+List<User> findByUsernameLike(String pattern);
+// Generated query: SELECT * FROM user WHERE username LIKE ?;
+
+(iv) Using OrderBy for Sorting:
+List<User> findByUsernameOrderByAgeAsc(String username);
+// Generated query: SELECT * FROM user WHERE username = ? ORDER BY age ASC;
+
+
+=> Custom Queries: If the automatic query generation is not enough for our needs, we can always define 
+custom queries using the @Query annotation or by using the @Query annotation with JPQL or SQL.

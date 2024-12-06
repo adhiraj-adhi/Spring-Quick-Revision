@@ -1,0 +1,122 @@
+(4.6) Example and Implementation.txt
+======================================
+
+=> Example:
+-------------
+
+(i) Job entity class:
+@Entity
+public class Job {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
+	private String title;
+	private String description;
+	private double minSalary;
+	private double maxSalary;
+	private String location;
+	
+    @JsonIgnore  // Don't forget to use this
+	// Many jobs can be in a company
+	@ManyToOne
+	@JoinColumn(name = "company_id")
+	private Company company;
+
+    // Getters and setters
+}
+
+(ii) Company entity class:
+@Entity
+public class Company {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int companyId;
+	private String companyName;
+	private String description;
+	
+	// One Company can have multiple jobs:
+	@OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
+	private List<Job> jobs;
+	
+	// One Company can have multiple reviews:
+	@OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
+	private List<Review> reviews;
+
+    // Getters and setters
+}
+
+(iii) Review entity class:
+@Entity
+public class Review {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
+	private String title;
+	private String description;
+	private double rating;
+	
+    @JsonIgnore
+	// One Review can be for one company
+	@ManyToOne
+	@JoinColumn(name="company_id")
+	private Company company;
+
+    // Getters ans setters
+}
+
+(iv) Let us suppose we have repository for all the Entity classes (i.e. Job, Company, and Review) as:
+(a)JobsRepository:
+package com.abhi.main.jobs.dao;
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.abhi.main.jobs.beans.Job;
+public interface JobsRepository extends JpaRepository<Job, Integer> {}
+
+(b) CompanyRepository:
+package com.abhi.main.company.dao;
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.abhi.main.company.beans.Company;
+public interface CompanyRepository extends JpaRepository<Company, Integer> {}
+
+(c) ReviewRepository:
+package com.abhi.main.reviews.dao;
+import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.abhi.main.reviews.beans.Review;
+import com.abhi.main.company.beans.Company;
+public interface ReviewRepository extends JpaRepository<Review, Integer> {
+	List<Review> findByCompanyCompanyId(int companyId);
+	/*
+	 * Here, search will be done based on company id. Also the name of method after findBy must be as:
+	 * Name_Of_Property_In_Review_Entity_Class_Based_On_Which_We_Have_To_Search_Followed_By_The_Name_Of_Field_Of_That_Property
+	 * 
+	 * Example: We had property named "company" in Review class and Company class had property named "companyId"
+	 * so we will use findByCompanyCompanyId(int companyId) then search will be done based on Company's companyId.
+	 * 
+	 * */
+}
+
+
+(v) We have service layer also for all entity classes.
+
+(vi) We have controller also for all entity classes as:
+/*
+* GET - all
+* GET - one by Id
+* POST - create one
+* PATCH - update
+* DELETE - delete
+*/
+
+(vii) Now if we try to create a Job without creating a company (assuming we are working on POSTMAN) as:
+{
+    "title": "Software Developer",
+    "description": "This is demo job 1",
+    "minSalary": 30000,
+    "maxSalary": 50000,
+    "location": "Hyderabad",
+    "company": {
+        "companyId": 1   // Assuming no company with id one exist
+    }
+}
+
+Here, we will get error.

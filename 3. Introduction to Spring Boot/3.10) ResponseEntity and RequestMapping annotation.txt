@@ -89,6 +89,34 @@ public ResponseEntity<Void> deleteResource() {
 }
 
 
+=> Note: Using ResponseStatusException to throw an exception if id is not found:
+-----------------------------------------------------------------------------------
+@Override
+public String deleteCategoryService(Long id) {
+	boolean status = false;
+	status = categories.removeIf(category -> category.getCategoryId().equals(id));
+	if (!status)
+		throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource Not Found");
+
+	return "Resource deleted successfully";
+}
+
+And in controller we can do:
+@DeleteMapping("/api/admin/categories/{categoryId}")  // Using 
+public ResponseEntity<String> deleteCategory(@PathVariable Long categoryId) {
+	ResponseEntity<String> respEntity = null;
+	try {
+		String str = catService.deleteCategoryService(categoryId);
+		respEntity = new ResponseEntity<>(str, HttpStatus.OK);		
+	} 
+	catch (ResponseStatusException e) {
+//		respEntity = new ResponseEntity<>(e.getMessage(), e.getStatusCode()); // Here, error message is as: 404 NOT_FOUND "Resource Not Found"
+		respEntity = new ResponseEntity<>(e.getReason(), e.getStatusCode()); // Here, error message is as: Resource Not Found
+	}
+	return respEntity;
+}
+
+
 (II) RequestMapping annotation:
 ----------------------------------
 => We can use this annotation with the method as:
