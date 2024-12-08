@@ -1,0 +1,184 @@
+(5.3) Lombok:
+===============
+
+=> Not the island of Indonesia (😂), but the Project Lombok.
+=> Official website: https://projectlombok.org/
+
+------------------------
+=> Introduction:
+------------------------
+(i) Project Lombok is a Java library that automatically plugs into our editor and build tools, spicing up 
+our Java.
+(ii) It reduces the amount of repetitive code amd increases the readability.
+(ii) Never write another getter or equals method again, with one annotation our class has a fully featured 
+builder, Automate our logging variables, and much more.
+
+(iv) For instance in our POJO class, we create getter and setter methods, toString() method, or hashCode() 
+methods. These can be avoided by using Lombok.
+
+----------------------------
+=> Some of the annotations:
+----------------------------
+(i) @Getter/@Setter: 
+-> Generate getter and setter methods. The generated getter/setter method will be 
+public unless we explicitly specify an AccessLevel. Legal access levels are PUBLIC, PROTECTED, PACKAGE, 
+and PRIVATE.
+-> Example:
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+
+public class GetterSetterExample {
+  @Getter @Setter private int age = 10;
+  @Setter(AccessLevel.PROTECTED) private String name;
+}
+
+-> Equivaled Vanilla Java code for above example:
+public class GetterSetterExample {
+  private int age = 10;
+  private String name;
+  public int getAge() {
+    return age;
+  }
+  public void setAge(int age) {
+    this.age = age;
+  }
+
+  protected void setName(String name) {
+    this.name = name;
+  }
+}
+
+-> We can also put a @Getter and/or @Setter annotation on a class. In that case, it's as if we annotate all 
+the non-static fields in that class with the annotation.
+-> We can always manually disable getter/setter generation for any field by using the special AccessLevel.NONE 
+access level.
+
+(ii) @ToString -> Generates toString() method
+(iii) @EqualsAndHashCode -> Generates hashCode and equals implementation from the fields of our object.
+
+(iv) @NoArgsConstructor, @RequiredArgsConstructor, and @AllArgsConstructor
+-> What is @RequiredArgsConstructor?
+It is used to generate constructor for all the non-initialized fields and fields that are marked as @NonNull
+that aren't initialized where they are declared.
+-> The order of the parameter matches the order in which the fields appear in our class.
+
+(v) @Data ->  @ToString + @EqualsAndHashCode + @Getter on all fields + @Setter on all the non-final fields 
++ @RequiredArgsConstructor
+
+(vi) @Value -> Immutable variant of @Data; i.e. all fields are made private and final by default, and 
+setters are not generated. The class itself is also made final by default, because immutability is not 
+something that can be forced onto a subclass. Like @Data, useful toString(), equals() and hashCode() 
+methods are also generated, each field gets a getter method, and a constructor that covers every argument 
+(except final fields that are initialized in the field declaration) is also generated.
+
+(vii) @NonNull -> We can use @NonNull on a record component, or a parameter of a method or constructor. 
+This will cause to lombok generate a null-check statement for us.
+-> Example:
+import lombok.NonNull;
+
+public class NonNullExample extends Something {
+  private String name;
+  
+  public NonNullExample(@NonNull Person person) {
+    super("Hello");
+    this.name = person.getName();
+  }
+}
+
+-> Equivaled Vanilla Java code for above example:
+import lombok.NonNull;
+
+public class NonNullExample extends Something {
+  private String name;
+  
+  public NonNullExample(@NonNull Person person) {
+    super("Hello");
+    if (person == null) {
+      throw new NullPointerException("person is marked non-null but is null");
+    }
+    this.name = person.getName();
+  }
+}
+
+(vii) @Cleanup: Automatic resource management: Call our close() methods safely with no hassle.
+-> Example (with Lombok):
+import lombok.Cleanup;
+import java.io.*;
+
+public class CleanupExample {
+  public static void main(String[] args) throws IOException {
+    @Cleanup InputStream in = new FileInputStream(args[0]);
+    @Cleanup OutputStream out = new FileOutputStream(args[1]);
+    byte[] b = new byte[10000];
+    while (true) {
+      int r = in.read(b);
+      if (r == -1) break;
+      out.write(b, 0, r);
+    }
+  }
+}
+
+-> Example (without Lombok i.e. Vanilla Java):
+import lombok.Cleanup;
+import java.io.*;
+
+public class CleanupExample {
+  public static void main(String[] args) throws IOException {
+    @Cleanup InputStream in = new FileInputStream(args[0]);
+    @Cleanup OutputStream out = new FileOutputStream(args[1]);
+    byte[] b = new byte[10000];
+    while (true) {
+      int r = in.read(b);
+      if (r == -1) break;
+      out.write(b, 0, r);
+    }
+  }
+}
+
+(ix) @Builder
+
+---------------------------------------------------------
+=> To use Lombok in Intellij we need to do two things:
+---------------------------------------------------------
+(i) Settings -> Plugins -> Install Lombok
+(ii) Settings -> Build Execution, Deployment -> Compiler -> Annotation Processors -> Enable annotation 
+processing
+
+---------------------------------------------------------
+=> To use Lombok in Eclipse we need to do two things:
+---------------------------------------------------------
+(i) Download the Lombok JAR file and double click on it. Make sure that Eclipse IDE is checked in IDE 
+section and thats all.
+(ii) Enable Annotation Processing (if needed):
+Go to Window > Preferences > Java > Compiler > Annotation Processing -> Ensure Enable Annotation Processing 
+is checked.
+
+----------------------
+=> Lombok in Action:
+----------------------
+(i) We have to add the Lombok dependency in our project. For that we can visit the SpringInitializr website,
+Select Maven, Java, Version of SpringBoot same as project, Jar Packaging, and then add lombok dependency.
+Then finally cut the dependency from pom.xml file and paste it in our project's pom.xml file.
+
+(ii) Now our Category POJO class will look like:
+package com.ecom.project.model;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Entity(name="categories")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Category {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long categoryId;
+	private String categoryName;
+}

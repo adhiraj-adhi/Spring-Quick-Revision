@@ -1,0 +1,280 @@
+(5.4) Validations in SpringBoot:
+=================================
+
+(I) Validations: 
+-------------------
+(i) Validations in SpringBoot are all about ensuring the data our application receives meets certain 
+criteria before it is processed.
+(ii) We can use Hiernate Validator for this purpose.
+
+----------------------------------------------------
+(II) Some annotations for validation in SpringBoot:
+----------------------------------------------------
+(i) @NotNull
+(ii) @NotEmpty: 
+    (a) For a String: The value must not be null or an empty string ("").
+    (b) For a Collection, Map, or Array: The value must not be null or have zero elements.
+(iii) @NotBlank: Used to validate that a string (only applies to String) is not null, empty, or consists 
+only of whitespace characters.
+(iv) @Size(min=x, max=y)
+    (a) The annotated element must have a size or length between the specified min and max values (inclusive).
+    (b) Common Use Case: To enforce length constraints on user inputs like passwords, usernames, or ensure a 
+    collection has a certain number of items.
+(v) @Email
+(vi) @Min(value) and @Max(value): Number should be in a specified range.
+
+----------------
+(III) Example:
+----------------
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
+public class User {
+    @NotEmpty(message = "Email cannot be empty")
+    @Email (message = "Email should be valid")
+    private String email;
+    @NotEmpty(message = "Name cannot be empty")
+    @Size (min = 2, message = "Name should have at least 2 characters")
+    private String name;
+    // getters and setters
+}
+
+------------------------------------------------------------------------------------------------
+(IV) Making use of Hibernate Validator (We can refer to official website for documentation):
+------------------------------------------------------------------------------------------------
+(i) Add the Hibernate Validator dependency: Use our favorite website.
+(ii) We are good to go:
+// import @NotBlank
+import jakarta.validation.constraints.NotBlank;
+
+// use @NotBlank
+@NotBlank
+private String categoryName;
+
+------------------------------------------------------------------------------------------------
+(V) Steps we will be following to handle the validation error/ Providing user-friendly error:
+------------------------------------------------------------------------------------------------
+(i) Using @Valid annotation:
+    (a) Applies To:
+        - Fields referencing other objects (nested validation).
+        - Method parameters and return values in methods.
+    (b) It ensures that validation rules defined on the referenced object or its elements are also applied. 
+        In other words, it validates the constraints of the annotated object and recursively validates any 
+        nested constraints within that object.
+    (c) Note: @Valid does not define any validation logic itself but acts as a trigger for validation on 
+        nested or contained elements.
+    (d) Example(Nested Object Validation):
+        public class Address {
+            @NotBlank(message = "Street cannot be blank")
+            private String street;
+
+            @NotBlank(message = "City cannot be blank")
+            private String city;
+
+            // Getters and setters
+        }
+
+        public class User {
+            @NotBlank(message = "Name cannot be blank")
+            private String name;
+
+            @Valid // Triggers validation for the Address object
+            private Address address;
+
+            // Getters and setters
+        }
+
+        Here, if address.street or address.city is blank, a validation error occurs because of @Valid.
+
+    (e) Example (Collection Validation):
+
+        public class User {
+            @NotBlank(message = "Name cannot be blank")
+            private String name;
+
+            @Valid
+            @Size(min = 1, message = "There must be at least one role")
+            private List<@NotBlank(message = "Role cannot be blank") String> roles;
+
+            // Getters and setters
+        }
+
+        Here, it ensures roles is not empty and that each element in roles is non-blank.
+
+    (f) Example (Method Parameter Validation):
+        public class UserService {
+            public void createUser(@Valid User user) {
+                // The User object and its nested constraints will be validated
+            }
+        }
+
+    (g) Example (Method Return Value Validation):
+        public class UserService {
+            @Valid
+            public User getUser() {
+                return new User(); // The returned User object will be validated
+            }
+        }
+
+    (h) With and without @Valid:
+        - When @Valid is used in a Spring Boot REST controller method to validate request body parameters 
+          or method arguments, validation failures typically result in a 400 Bad Request response.
+        - But when @Valid is not used, the validation for nested objects or elements won't be triggered. As 
+          a result, invalid data might pass unchecked, potentially causing application errors later, such as NullPointerException, leading to a 500 Internal Server Error.
+    
+    (i) Why we want 400 Bad Request instead of 500 Internal Server Error?
+        The 400 Bad Request status indicates that the client sent an invalid request, which aligns with the 
+        purpose of validation.
+        By using @Valid, the framework can detect validation issues early and return a meaningful error 
+        response (400) instead of allowing the application to proceed and fail with an internal error (500).
+    
+    (j) Example:
+        @PostMapping("/admin/categories")
+        public ResponseEntity<String> createCategory(@Valid @RequestBody Category category) {
+            boolean status = catService.createCategoryService(category);
+            if(status)
+                return new ResponseEntity<>("Resource created", HttpStatus.CREATED);
+            else
+                return new ResponseEntity<>("Resource creation failed", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+(ii) We will be handling the exceptions in GlobalExceptionHandler class (created in 
+     com.ecom.project.exceptions package). This class will give us centralized way to handle exceptions. 
+     We will mark this class with @RestControllerAdvice.
+    (Q) What is @RestControllerAdvice?
+        - @RestControllerAdvice is a helper for REST APIs that catches errors or exceptions happening 
+          anywhere in our application and provides custom responses instead of letting the application crash.
+        - Why Do We Need It?
+          Imagine we’re building a REST API. If something goes wrong (e.g., invalid input or a resource is 
+          not found), Spring Boot might:
+          1. Crash the application.
+          2. Return a generic error response that's hard for our API users to understand.
+        - Using @RestControllerAdvice, we can intercept those errors and:
+          1. Handle them gracefully.
+          2. Provide clear, customized messages to users (like “Invalid Input” or “User Not Found”).
+          3. Avoid exposing internal details (like stack traces) in our API responses.
+        - How Does It Work?
+          1. Global Exception Handler: We create a class and annotate it with @RestControllerAdvice. This 
+             class will automatically watch for errors in all our REST APIs.
+          2. Inside this class, we define methods to handle different types of errors. We use 
+             @ExceptionHandler to specify which type of error the method should handle.
+        - It combines the features of @ControllerAdvice and @ResponseBody. @RestControllerAdvice is 
+          specifically for REST APIs. It automatically converts the error responses into JSON or the 
+          appropriate response format for APIs. We don’t need to manually add @ResponseBody like we would 
+          with @ControllerAdvice.
+        - By default, it applies to all controllers. We can restrict its scope to specific packages or 
+          controllers using the basePackages or assignableTypes attributes.
+        - If no @RestControllerAdvice or @ExceptionHandler is defined:
+          1. Spring Boot uses its default error handling mechanism (BasicErrorController).
+          2. Returns a JSON response with fields like timestamp, status, error, message, and path.
+
+
+=> Example:
+package com.ecom.project.exceptions;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<Map<String, String>> methodArgumentNotValidException(MethodArgumentNotValidException e) {
+		Map<String, String> response = new HashMap<>();
+		
+		e.getBindingResult().getAllErrors().forEach(err -> {
+			String fieldName = ((FieldError)err).getField(); 
+            /* We are casting the ObjectError (err) to a FieldError because we’re only dealing with 
+            field-specific errors.*/
+			String message = err.getDefaultMessage();
+			response.put(fieldName, message);
+		});
+		
+		return new ResponseEntity<Map<String,String>>(response, HttpStatus.BAD_REQUEST);
+	}
+}
+
+
+(Q) What is MethodArgumentNotValidException?
+    - This exception is thrown when a method argument annotated with validation constraints (like @Valid) 
+      fails validation.
+    - It contains details about which fields failed validation and why.
+
+(Q) What is getBindingResult()?
+    - The MethodArgumentNotValidException has a method getBindingResult() that provides a BindingResult 
+      object.
+    - What is BindingResult?
+      1. It contains all the details about validation errors.
+      2. It knows which fields failed validation and their error messages.
+    
+(Q) What is getAllErrors()?
+    - This method of BindingResult retrieves a list of validation errors (objects of type ObjectError).
+    - Each ObjectError represents one validation error for either a field or the object as a whole.
+
+(Q) What is FieldError?
+    - A subclass of ObjectError that specifically represents validation errors for a particular field.
+    - It contains details like:
+      1. The name of the field that failed validation (getField()).
+      2. The error message associated with that field (getDefaultMessage()).
+
+
+------------------------------------------------
+(VI) What if we want our custom error message?
+------------------------------------------------
+- We can do that as:
+@NotBlank(message = "Fail Hogaya")
+private String categoryName;
+
+
+------------------------------------------------------------------------------
+(VII) What if we want our custom exceptions (Custom Exception In SpringBoot):
+------------------------------------------------------------------------------
+=> Let us understand this by implementing a custom exception, say, ResourceNotFoundException.
+
+Step(i): Define a Custom Exception Class:-
+    - Create a new exception class by extending RuntimeException (or Exception if we prefer checked exceptions).
+    - Example:
+        public class ResourceNotFoundException extends RuntimeException {
+            public ResourceNotFoundException(String message) {
+                super(message); // Pass the message to the parent class
+            }
+        }
+
+Step(ii): Use the Custom Exception:-
+    - Throw our custom exception in a controller or service when a specific error occurs.
+    - Example:
+        import org.springframework.web.bind.annotation.*;
+        @RestController
+        @RequestMapping("/products")
+        public class ProductController {
+            @GetMapping("/{id}")
+            public String getProductById(@PathVariable String id) {
+                if (id.equals("0")) {
+                    throw new ResourceNotFoundException("Product with ID " + id + " not found");
+                }
+                return "Product " + id;
+            }
+        }
+
+Step(iii): Handle the Custom Exception
+    - Use @RestControllerAdvice and @ExceptionHandler to handle our custom exception and send a meaningful response to the client.
+    - Example:
+        import org.springframework.http.HttpStatus;
+        import org.springframework.http.ResponseEntity;
+        import org.springframework.web.bind.annotation.ExceptionHandler;
+        import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+        @RestControllerAdvice
+        public class GlobalExceptionHandler {
+            @ExceptionHandler(ResourceNotFoundException.class)
+            public ResponseEntity<String> handleResourceNotFoundException(ResourceNotFoundException ex) {
+                return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+            }
+        }
+

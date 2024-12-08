@@ -1,0 +1,21 @@
+(5.2) Working with Category:
+==============================
+
+=> Details with respect to Category:
+-------------------------------------
+
+S.No. |      API Name      |        Endpoint       | Method |            Purpose          | Request Body  | Request Parameters | Response
+1.    |  Create Category   |  /api/admin/category  |  POST  |     Create a category       |    Category   |       None         | CategoryDTO (Initially, we can return simple String instead of DTO)
+2.    |   Get categories   | /api/public/categories|   GET  |Reteieve a list of categories|      None     |pageNumber,pageSize,|CategoryResponse
+                                                                                                          |sortBy, sortOrder   |
+3.    |   Update Category  |/api/admin/categories/{categoryId}|PUT|   Update a category   |    Category   |     categoryId     | CategoryDTO
+4.    |   Delete Category  |/api/admin/categories/{categoryId}|DELETE|   Delete a category|      None     |     categoryId     | CategoryDTO
+
+
+=> What is CategoryDTO?
+A CategoryDTO (Data Transfer Object) is commonly used in APIs to encapsulate and transfer category-related 
+data between different layers of an application (e.g., from the service layer to the client or UI layer).
+It's a design pattern meant to streamline the exchange of data, avoiding direct exposure of entity objects 
+to external clients.
+
+=>

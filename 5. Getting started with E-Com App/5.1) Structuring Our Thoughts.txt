@@ -1,0 +1,34 @@
+(5.1) Structuring Our Thoughts:
+=================================
+
+=> Flow of request and response:
+--------------------------------
+Browser <-> Our Application (Controller <-> Service <-> Repository) <-> Database
+
+=> Controllers we will be having:
+----------------------------------
+a. Address
+b. Auth
+c. Cart
+d. Category
+e. Order
+f. Product
+
+=> Service we will be having:
+----------------------------------
+a. Address
+b. Auth
+c. Cart
+d. Category
+e. Order
+f. Product
+
+=> Repository we will be having:
+----------------------------------
+a. Address
+b. Auth
+c. Cart
+d. Category
+e. Order
+f. Product
+
