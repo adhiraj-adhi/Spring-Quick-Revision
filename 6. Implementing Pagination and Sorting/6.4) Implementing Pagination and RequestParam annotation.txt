@@ -1,0 +1,155 @@
+(6.4) Implementing Pagination and RequestParam annotation:
+=============================================================
+
+(I) @RequestParam annotation:-
+--------------------------------
+(i) Suppose our URL is: http://localhost:8080/api/echo?message="Hi There" then to get the message
+    we can use the @RequestParam annotation in controller as:
+    @GetMapping("/api/echo")
+    public ResponseEntity<String> echoMessage(@RequestParam(name = "message") String msg) {
+        return new ResponseEntity<>("Echoed message: "+msg, HttpStatus.ok);
+    }
+
+(ii) We can even have default value specified for message as:
+@RequestParam(name = "message", defaultValue = "Hey there")
+
+(iii) By default if we are using @RequestParam then we have to either pass the query parameter as 
+  expected or else specify default value or else specify required as false i.e.:
+    - Consider URL is: http://localhost:8080/api/echo
+    (a) And we have specified a query parameter using @RequestParam as:
+        @RequestParam(name = "message") String msg => we will get Bad Request error.
+    (b) And we have specified a query parameter using @RequestParam as:
+        @RequestParam(name = "message", defaultValue = "Hey there") => we will not get error.
+    (c) And we have specified a query parameter using @RequestParam as:
+        @RequestParam(name = "message", required=false) String msg => we will not get error.
+
+
+--------------------------------------------
+(II) Implementing Pagination for Category:
+--------------------------------------------
+(i) We will request query parameter for getAllCategory() as follows:
+    (a) In CategoryController:
+        @GetMapping("/public/categories")
+        public ResponseEntity<CategoryResponse> getAllCategories(
+                @RequestParam(name="pageNumber") Integer pageNumber,
+                @RequestParam(name="pageSize") Integer pageSize) {
+            return ResponseEntity.ok(catService.getAllCategoriesService(pageNumber, pageSize));
+        }
+    (b) In CategoryService interface:
+        CategoryResponse getAllCategoriesService(Integer pageNumber, Integer pageSize);
+    (c) In CategoryServiceImpl class:
+        - We can write code to reteive specific categories for a page by manually writing the code or
+          we can even use Pageable, PageRequest, and Page as:
+            @Override
+            public CategoryResponse getAllCategoriesService(Integer pageNumber, Integer pageSize) {
+                Pageable pageable = PageRequest.of(pageNumber, pageSize);
+                Page<Category> page = catRepository.findAll(pageable);
+                
+                List<Category> categories = page.getContent();
+                if(categories.isEmpty())
+                    throw new APIException("There's no category present");
+                    
+                List<CategoryDTO> categoryDTOs = categories.stream()
+                    .map(category -> modelMapper.map(category, CategoryDTO.class))
+                    .toList();
+            
+                CategoryResponse categoryResponse = new CategoryResponse();
+                categoryResponse.setContent(categoryDTOs);
+                return categoryResponse;
+            }
+
+
+
+(ii) What is Pageable, PageRequest, and Page?
+    (a) Pageable:
+        - Description: Pageable is an interface in Spring Data that defines pagination information, such as 
+          the page number, page size, and sorting criteria.
+        - Purpose: It acts as an abstraction for pagination configuration.
+        - Package: org.springframework.data.domain
+    (b) PageRequest:
+        - Description: PageRequest is a concrete class that implements Pageable and provides static factory 
+          methods for creating pagination information.
+        - Purpose: It is commonly used to construct a Pageable object.
+        - Package: org.springframework.data.domain
+        - Overloaded of() methods in PageRequest: PageRequest provides the following overloaded of() methods:
+            (i) of(int page, int size):
+                1. Creates a PageRequest for the specified page number and size.
+                2. Example: PageRequest.of(0, 10) → First page with 10 items per page.
+            (ii) of(int page, int size, Sort sort):
+                1. Creates a PageRequest with sorting criteria.
+                2. Example: PageRequest.of(0, 10, Sort.by("name").ascending())
+            (iii) of(int page, int size, Sort.Direction direction, String... properties):
+                1. Creates a PageRequest with a sort direction and property names.
+                2. Example: PageRequest.of(0, 10, Sort.Direction.DESC, "name", "createdDate")
+    (c) Page
+        - Description: Page is a wrapper interface for paginated results returned from a repository query.
+        - Purpose: It provides details about the current page, total pages, total elements, and more.
+        - Package: org.springframework.data.domain
+        - Common Methods in Page:
+            (i) getContent(): Returns the list of entities on the current page.
+            (ii) getTotalPages(): Returns the total number of pages.
+            (iii) getTotalElements(): Returns the total number of elements.
+            (iv) isLast() / isFirst(): Checks if the current page is the last or first page.
+
+
+(iii) We can now return Pagination details in response. For this we need to do two things:
+    (a) In CategoryResponse class:
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public class CategoryResponse {
+            private List<CategoryDTO> content;
+            private Integer pageNumber;
+            private Integer pageSize;
+            private Long totalElements;
+            private Integer totalPages;
+            private boolean lastPage;
+        }
+
+    (b) In CategoryServiceImpl class:
+        @Override
+        public CategoryResponse getAllCategoriesService(Integer pageNumber, Integer pageSize) {
+            Pageable pageable = PageRequest.of(pageNumber, pageSize);
+            Page<Category> page = catRepository.findAll(pageable);
+            
+            List<Category> categories = page.getContent();
+            if(categories.isEmpty())
+                throw new APIException("There's no category present");
+                    
+            List<CategoryDTO> categoryDTOs = categories.stream()
+                    .map(category -> modelMapper.map(category, CategoryDTO.class))
+                    .toList();
+            
+            CategoryResponse categoryResponse = new CategoryResponse();
+            categoryResponse.setContent(categoryDTOs);
+            categoryResponse.setPageNumber(pageNumber);
+            categoryResponse.setPageSize(pageSize);
+            categoryResponse.setTotalElements(page.getTotalElements());
+            categoryResponse.setTotalPages(page.getTotalPages());
+            categoryResponse.setLastPage(page.isLast());
+            return categoryResponse;
+        }
+
+
+--------------
+(III) Note:
+--------------
+(i) If we note then we are passing the default value for pageNumber and pageSize in the CategoryController
+    which is not okay. But, what if we create the default value in a separate class so that we can use them
+    wherever required in our application. This will give us a centralized management and we will be not
+    required to go and change the default value in each class individually.
+
+(ii) So for this we can create a class that contains the default values (say AppConstants). This class is 
+     going to have all the constants or default values that we are going to use in our project.
+
+(iii) AppConstants.java class:
+        package com.ecom.project.config;
+
+        public class AppConstants {
+            public static final String PAGE_NUMBER = "0";
+            public static final String PAGE_SIZE = "25";
+        }
+
+(iv) Now in CategoryController class we can do:
+    @RequestParam(name="pageNumber", defaultValue = AppConstants.PAGE_NUMBER) Integer pageNumber
+	@RequestParam(name="pageSize", defaultValue = AppConstants.PAGE_SIZE) Integer pageSize

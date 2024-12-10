@@ -1,0 +1,25 @@
+(6.1) Introduction to pagination:
+===================================
+
+=> Pagination is a technique to split a large dataset into smaller, manageable chunks, often called "pages." This is particularly useful in APIs when dealing with large amounts of data to improve performance and user experience.
+
+
+=> We can send pagination related data (a.k.a. pagination metadata) in our API call so that client can render specific page and its relevant data.
+
+=> How we pass the request and what we get in response?
+   (a) In request, we pass it using the query parameter as: page=1&limit=10
+   (b) In response, we get the response as:
+        {
+            "Content": [
+                {"categoryId": 1, "categoryName": "Book Title 1", "author": "Author Name 1"},
+                {"categoryId": 2, "categoryName": "Book Title 2", "author": "Author Name 2"},
+                // 8 more book entries...
+            ],
+            "pageNumber": 0,
+            "pageSize": 10,
+            "totalElements": 1000,
+            "totalPages": 100,
+            "lastPage": false
+        }
+
+=> URL structure: http://www.example.com/page?parameter1=value1&parameter2=value2

@@ -1,0 +1,160 @@
+(6.3) Implementing DTO and ModuleWrapper for Category bean of E-Commerce project:
+===================================================================================
+
+(I) We will create a new package for this and name it as com.ecom.project.payload
+
+-------------------------------------------------------------------------------------------------------------
+(II) Steps (Assuming the changes we need to do w.r.to getAllCategory i.e. we will ignore other requests for 
+     now):
+-------------------------------------------------------------------------------------------------------------
+    (a) Create two classes named CategoryDTO and CategoryResponse for processing request and response 
+        respectively.
+
+    (b) In CategoryDTO class we will create the fields that we want in response for Category as:
+        package com.ecom.project.payload;
+
+        import lombok.AllArgsConstructor;
+        import lombok.Data;
+        import lombok.NoArgsConstructor;
+
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public class CategoryDTO {
+            private Long categoryId;
+            private String categoryName;
+        }
+
+    (c) In CategoryResponse we will do:
+        package com.ecom.project.payload;
+
+        import java.util.List;
+
+        import lombok.AllArgsConstructor;
+        import lombok.Data;
+        import lombok.NoArgsConstructor;
+
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public class CategoryResponse {
+            private List<CategoryDTO> content;
+        }
+
+
+    (d) Now, we can update the Service layer as (For simplicity we will only consider getAllCategoriesService() 
+        method for now):
+        (i) CategoryService interface:
+            public interface CategoryService {
+                CategoryResponse getAllCategoriesService();
+            }
+
+        (ii) CategoryServiceImpl class:
+            @Service
+            public class CategoryServiceImpl implements CategoryService {
+                private CategoryRepository catRepository;
+
+                public CategoryServiceImpl(CategoryRepository catRepository) {
+                    this.catRepository = catRepository;
+                }
+
+                @Override
+                public CategoryResponse getAllCategoriesService() {
+                    List<Category> categories = catRepository.findAll();
+                    if(categories.isEmpty())
+                        throw new APIException("There's no category present");
+                    
+                    CategoryDTO categoryDTO = new CategoryDTO();
+                    
+                    List<CategoryDTO> categoryDTOList = categories.stream().map(category -> {
+                        categoryDTO.setCategoryId(category.getCategoryId());
+                        categoryDTO.setCategoryName(category.getCategoryName());
+                        return categoryDTO;
+                    }).toList();
+                            
+                    CategoryResponse categoryResponse = new CategoryResponse();
+                    categoryResponse.setContent(categoryDTOList);
+                    return categoryResponse;
+                }
+            }
+
+    (e) CategoryController class:
+        @RestController
+        @RequestMapping("/api")
+        public class CategoryController {
+            private CategoryService catService;
+            
+            public CategoryController(CategoryService catService) {
+                this.catService = catService;
+            }
+
+            @GetMapping("/public/categories")
+            public ResponseEntity<CategoryResponse> getAllCategories() {
+                return ResponseEntity.ok(catService.getAllCategoriesService());
+            }
+        }
+
+--------------------------------------------------------------------------------------------------------
+(III) But, here we are writing n-number of lines to convert Category to CategoryDTO and CategoryDTO to 
+    CategoryResponse in CategoryServiceImpl. We can reduce these lines using ModuleMapper.
+--------------------------------------------------------------------------------------------------------
+    (i) What is ModuleMapper?
+        - Applications often consist of similar but different object models, where the data in two models 
+          may be similar but the structure and concerns of the models are different (for instance, we have
+          Category and CategoryDTO). Object mapping makes it easy to convert one model to another, allowing 
+          separate models to remain segregated.
+        - The goal of ModelMapper is to make object mapping easy, by automatically determining how one 
+          object model maps to another, based on conventions, in the same way that a human would - while 
+          providing a simple, refactoring-safe API for handling specific use cases.
+    
+    (ii) How to use it in our project?
+        - Step(a): Add the modelmapper dependency:
+            <dependency>
+                <groupId>org.modelmapper</groupId>
+                <artifactId>modelmapper</artifactId>
+                <version>3.0.0</version>
+            </dependency>
+        - Step(b): Create a bean for modelmapper in com.ecom.project.config.AppConfig.java class as:
+            package com.ecom.project.config;
+            import org.modelmapper.ModelMapper;
+            import org.springframework.context.annotation.Bean;
+            import org.springframework.context.annotation.Configuration;
+
+            @Configuration
+            public class AppConfig {
+                @Bean
+                public ModelMapper modelMapper() {
+                    return new ModelMapper();
+                }
+            }
+        
+        - Get the ModelMapper object in CategoryServiceImpl class and do the following:
+            @Service
+            public class CategoryServiceImpl implements CategoryService {
+                private CategoryRepository catRepository;
+                @Autowired
+                private ModelMapper modelMapper;
+
+                public CategoryServiceImpl(CategoryRepository catRepository) {
+                    this.catRepository = catRepository;
+                }
+
+                @Override
+                public CategoryResponse getAllCategoriesService() {
+                    List<Category> categories = catRepository.findAll();
+                    if(categories.isEmpty())
+                        throw new APIException("There's no category present");                            
+                    List<CategoryDTO> categoryDTOs = categories.stream()
+                            .map(category -> modelMapper.map(category, CategoryDTO.class))
+                            .toList();
+                    
+                    CategoryResponse categoryResponse = new CategoryResponse();
+                    categoryResponse.setContent(categoryDTOs);
+                    return categoryResponse;
+                }
+            }
+
+
+-------------------------------------------------------------------------------------------
+(IV) Implement the DTO based approach for all other APIs i.e. create, update, and delete:
+-------------------------------------------------------------------------------------------

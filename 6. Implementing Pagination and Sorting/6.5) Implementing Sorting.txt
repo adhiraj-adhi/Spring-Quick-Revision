@@ -1,0 +1,131 @@
+(6.5) Implementing Sorting:
+=============================
+
+(I) We can specify the SORT_BY and SORT_ORDER in AppConstants as:
+    package com.ecom.project.config;
+    public class AppConstants {
+        public static final String PAGE_NUMBER = "0";
+        public static final String PAGE_SIZE = "25";
+        public static final String SORT_BY = "categoryId";
+        public static final String SORT_ORDER = "ASC";
+    }
+
+
+(II) In CategoryController:
+    @GetMapping("/public/categories")
+	public ResponseEntity<CategoryResponse> getAllCategories(
+			@RequestParam(name="pageNumber", defaultValue = AppConstants.PAGE_NUMBER) Integer pageNumber, // pageNumber = 0 => first page
+			@RequestParam(name="pageSize", defaultValue = AppConstants.PAGE_SIZE) Integer pageSize,
+			@RequestParam(name="sortBy", defaultValue = AppConstants.SORT_BY) String sortBy,
+			@RequestParam(name="sortOrder", defaultValue = AppConstants.SORT_ORDER) String sortOrder) {
+		return ResponseEntity.ok(catService.getAllCategoriesService(pageNumber, pageSize, sortBy, sortOrder));
+	}
+
+(III) In CategoryService interface we can have getAllCategoriesService() as:
+     CategoryResponse getAllCategoriesService(Integer pageNumber, Integer pageSize, String sortBy, 
+        String sortOrder);
+
+(IV) Now in CategoryServiceImpl class:
+    @Override
+	public CategoryResponse getAllCategoriesService(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+		Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
+				? Sort.by(sortBy).ascending()
+				: Sort.by(sortBy).descending();
+		Pageable pageable = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
+		Page<Category> page = catRepository.findAll(pageable);
+		
+		List<Category> categories = page.getContent();
+		if(categories.isEmpty())
+			throw new APIException("There's no category present");
+			
+		List<CategoryDTO> categoryDTOs = categories.stream()
+				.map(category -> modelMapper.map(category, CategoryDTO.class))
+				.toList();
+		
+		CategoryResponse categoryResponse = new CategoryResponse();
+		categoryResponse.setContent(categoryDTOs);
+		categoryResponse.setPageNumber(pageNumber);
+		categoryResponse.setPageSize(pageSize);
+		categoryResponse.setTotalElements(page.getTotalElements());
+		categoryResponse.setTotalPages(page.getTotalPages());
+		categoryResponse.setLastPage(page.isLast());
+		return categoryResponse;
+	}
+
+
+----------------------------
+(V) Diving into Sort class:
+----------------------------
+    - The Sort class in Spring Data is a utility for specifying sorting options when querying data 
+      from a database. It is part of the pagination and sorting mechanism provided by Spring Data JPA.
+    - (Q) What is the Sort class?
+            (a) Description: Sort is a class that allows us to specify sorting criteria for query results, 
+                such as the property (or column) to sort by and the direction (ascending or descending).
+            (b) Purpose: It is used to define the order in which results should be returned from a query.
+            (c) Package: org.springframework.data.domain.Sort
+    - Key Concepts in Sort:
+        (a) Sorting Direction:
+            1. The direction specifies whether the sorting should be in ascending or 
+               descending order. 
+            2. Represented by `Sort.Direction` (an enum):
+            3. Sort.Direction.ASC: Ascending order.
+            4. Sort.Direction.DESC: Descending order.
+
+        (b) Sorting Properties:
+            1. Sorting is applied based on specific properties (fields or database columns). We need to 
+               provide the name of the property as a string when creating a Sort object.
+
+    - Common Methods in the Sort Class:
+        (a) Static Factory Methods:
+            1. Sort.by(String... properties): Creates a Sort object for the given property names, sorted 
+               in ascending order by default. Example: Sort.by("name", "dateCreated")
+            2. Sort.by(Sort.Order... orders): Allows creating a Sort object using multiple Order objects.
+               Example: Sort.by(Sort.Order.asc("name"), Sort.Order.desc("dateCreated"))
+            3. Sort.by(List<Sort.Order> orders): Similar to the above but accepts a list of Order objects.
+
+        (b) Chained Methods:
+            1. ascending(): Specifies ascending sort direction. Example: Sort.by("name").ascending()
+            2. descending(): Specifies descending sort direction. Example: Sort.by("name").descending()
+
+    
+    - Inner Classes in Sort:
+        (a) Sort.Order
+            1. Represents a single sorting instruction, such as the property to sort by and the direction 
+               (ASC or DESC).
+            2. Constructors: Order(Sort.Direction direction, String property): Creates an Order object.
+            3. Methods:
+               #. getProperty(): Returns the property name for sorting.
+               #. getDirection(): Returns the direction (ASC or DESC).
+               #. isAscending(): Checks if the direction is ascending.
+               #. with(Sort.Direction direction): Returns a new Order with the specified direction.
+
+        (b) Sort.Direction: Enum that defines sorting directions:-
+            1. ASC: Ascending.
+            2. DESC: Descending.
+            3. Methods:
+                #. isAscending(): Checks if the direction is ascending.
+                #. isDescending(): Checks if the direction is descending.
+
+    - Examples of Using Sort:
+        (a) Basic Sorting:
+            Sort sort = Sort.by("name").ascending();
+            // Equivalent to: ORDER BY name ASC
+
+        (b) Multiple Properties:
+            Sort sort = Sort.by("name").ascending()
+               .and(Sort.by("createdDate").descending());
+            // Equivalent to: ORDER BY name ASC, createdDate DESC
+
+        (c) Using Sort.Order:
+            Sort.Order order1 = new Sort.Order(Sort.Direction.ASC, "name");
+            Sort.Order order2 = new Sort.Order(Sort.Direction.DESC, "createdDate");
+            Sort sort = Sort.by(order1, order2);
+            // Equivalent to: ORDER BY name ASC, createdDate DESC
+
+    - Practical Use in Repositories:
+        (a) Sorting Without Pagination:
+            List<Category> categories = catRepository.findAll(Sort.by("name").ascending());
+        
+        (b) Sorting With Pagination:
+            Pageable pageable = PageRequest.of(0, 10, Sort.by("name").ascending());
+            Page<Category> page = catRepository.findAll(pageable);
