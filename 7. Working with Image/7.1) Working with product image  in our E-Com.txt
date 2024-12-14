@@ -1,0 +1,121 @@
+(7.1) Working with product image  in our E-Com:-
+==================================================
+
+(I) Accepting image in controller:
+------------------------------------
+(a) Code:
+    @PutMapping("/admin/products/{productId}/image")
+    public ResponseEntity<ProductDTO> updateProductImage(
+            @PathVariable Long productId,
+            @RequestParam("Image") MultipartFile productImage) {
+        ProductDTO updatedProduct = productService.updateProductImageService(productId, productImage);
+        return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
+    }
+
+(b) @RequestParam:
+    - It indicates that the productImage parameter should be bound to a request parameter with the name "Image".
+    - This annotation is used to fetch form data or query parameters sent with the HTTP request.
+    - In this case, it specifically binds the uploaded file associated with the key "Image" in the request.
+
+(c) MultipartFile:
+    - Represents the file that is being uploaded.
+    - Part of the org.springframework.web.multipart package.
+    - Allows us to access the content of the file, file name, content type, and size programmatically.
+
+
+-------------------------------------
+(II) In ProductServiceImpl class:
+-------------------------------------
+    @Override
+    public ProductDTO updateProductImageService(Long productId, MultipartFile productImage) {
+        // Get the product from DB
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", productId, "productId"));
+        
+        /* Upload image to server (for now we will be uploading to server by creating a folder but 
+        * later on we can upload to some media server also say like S3 bucket). Thereafter get
+        *  the file name of uploaded image
+        */
+        String path = "images/";
+        String filename = uploadImage(path, productImage);		
+        
+
+        // Updating the new file name to the product and save the product
+        product.setImage(filename);
+        Product savedProduct = productRepository.save(product);
+        
+        
+        // return DTO after mapping product to DTO
+        return modelMapper.map(savedProduct, ProductDTO.class);
+    }
+
+    private String uploadImage(String path, MultipartFile productImage) {
+        // File name of original/current file
+        String originalFileName = productImage.getOriginalFilename();
+        
+        // Generate a unique file name
+        String randomId = UUID.randomUUID().toString(); // Generating a random Id
+        String fileName = randomId
+                .concat(originalFileName
+                        .substring(originalFileName.lastIndexOf('.')));  // Concating original file name with extension to randomId
+            // say if original file name is mat.jpg and randomId is 1234 then fileName will be 1234.jpg
+        String filePath = path + File.separator + fileName; 
+			/* (Q) Why we are using File.separator, we could have simply done: path+"/"+fileName?
+			 *     This is so because file separator may vary from machine to machine (i.e. separator 
+			 *     may be different on server machine).
+			 */
+        
+        // Check if the path where we are uploading image exists (if not then create)
+        File folder = new File(path);
+        if(!folder.exists())
+            folder.mkdir();
+        
+        // Upload the image on server
+        try {
+            Files.copy(productImage.getInputStream(), Paths.get(filePath));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        // return the file name
+        return fileName;
+    }
+
+
+(Q) What is use of: File folder = new File(path)?
+    - It does not create a file or folder: The File object represents a file or folder, but the file or folder may or may not 
+      actually exist.
+    - Used for operations: You can use the File object to perform various operations like checking if the file exists, creating 
+      a file, deleting it, listing files in a directory, etc.
+
+
+(Q) What is use of the line: Files.copy(productImage.getInputStream(), Paths.get(filePath))?
+    - This line is part of the Java NIO (New I/O) API and performs the operation of copying the contents of the 
+      uploaded file (`productImage`) to the specified file path (`filePath`) on the server.
+    - Key Components:
+        (a) Files.copy:
+            (i) A static method from the `java.nio.file.Files` class.
+            (ii) Used to copy data from one source to a target.
+            (iii) In this case, the source is the input stream of the uploaded file (`productImage.getInputStream()`), 
+              and the target is the server file path represented by `Paths.get(filePath)`.
+
+        (b) productImage.getInputStream():
+            (i) Retrieves the file's input stream from the uploaded `MultipartFile`.
+            (ii) This stream represents the file's raw binary data, which can be read and written.
+
+        (c) Paths.get(filePath):
+            (i) Converts the given string path (`filePath`) into a `Path` object.
+            (ii) The `Path` object is used to interact with the file system in a platform-independent manner.
+
+        (d) Copying the file:
+            (i) This operation reads the file's content from the input stream and writes it to the target location specified 
+                by `filePath`.
+            (ii) If the destination file already exists, the method will throw a `FileAlreadyExistsException` unless handled 
+                or replaced explicitly.
+
+    -What It Does:
+        (a) Takes the binary data of the uploaded file (`productImage`) via its input stream.
+        (b) Writes this data to the destination specified by `filePath`.
+        (c) Ensures the file is created at the correct location, preserving its data.
+
+

@@ -1,0 +1,85 @@
+(7.2) Modification w.r.to FileUpload and Path:
+==================================================
+
+(I) Modification w.r.to FileUpload:
+-------------------------------------
+=> We see that we have created the uploadImage() function in the same ProductServiceImpl class. We can 
+extract the File related code to some other file to keep logics separated.
+
+=> For this we will create an interface and its implemented class as:
+    (i) FileService interface:
+        package com.ecom.project.services;
+
+        import org.springframework.web.multipart.MultipartFile;
+
+        public interface FileService {
+            String uploadImage(String path, MultipartFile productImage);
+        }
+    
+    (ii) FileServiceImpl class:
+        package com.ecom.project.services;
+
+        import java.io.File;
+        import java.io.IOException;
+        import java.nio.file.Files;
+        import java.nio.file.Paths;
+        import java.util.UUID;
+
+        import org.springframework.stereotype.Service;
+        import org.springframework.web.multipart.MultipartFile;
+
+        @Service
+        public class FileServiceImpl implements FileService {
+            @Override
+            public String uploadImage(String path, MultipartFile productImage) {
+                // File name of original/current file
+                String originalFileName = productImage.getOriginalFilename();
+                
+        //		String fileNameWithoutExtension = productImage.getName();
+                
+                // Generate a unique file name
+                String randomId = UUID.randomUUID().toString(); // Generating a random Id
+                String fileName = randomId
+                        .concat(originalFileName
+                                .substring(originalFileName.lastIndexOf('.')));  // Concating original file name with extension to randomId
+                    // say if original file name is mat.jpg and randomId is 1234 then fileName will be 1234.jpg
+                String filePath = path + File.separator + fileName; 
+                    /* (Q) Why we are using File.separator, we could have simply done: path+"/"+fileName?
+                    *     This is so because file separator may vary from machine to machine (i.e. separator 
+                    *     may be different on server machine).
+                    */
+                
+                // Check if the path where we are uploading image exists (if not then create)
+                File folder = new File(path);
+                if(!folder.exists())
+                    folder.mkdir();
+                
+                // Upload the image on server
+                try {
+                    Files.copy(productImage.getInputStream(), Paths.get(filePath));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                
+                // return the file name
+                return fileName;
+            }
+        }
+
+
+    (iii) Now, in ProductServiceImpl class we can get the FileService bean using @Autowired and use accordinngly.
+
+
+---------------------------------
+(II) Modification w.r.to Path:
+---------------------------------
+=> We will declare the path variable in application.properties file so that if we change at this location
+the corresponding change takes place everywhere we use path variable.
+
+=> For this we can do:
+    (i) In application.properties file:
+        project.image=images/
+    
+    (ii) Now, in ProductServiceImpl class:
+        @Value("${project.image}")
+	    private String path; // reading path from application.properties file
