@@ -1,0 +1,25 @@
+(10.3) Cart Module – Models:
+=============================
+
+- We will be using two models [Cart and CartItem].
+- Why Two Models?
+    - Cart → Represents a user’s shopping cart.
+    - CartItem → Represents individual items inside a cart.
+    - Relationship:
+        - One User → One Cart.
+        - One Cart → Many CartItems.
+
+- Cart Model (carts table)
+    - Fields:
+        - cart_id → Unique identifier for the cart (PK - Primary Key).
+        - user_id → Linked to Users table (1:1 relationship).
+        - total_price → Sum of all items’ prices in the cart.
+
+- CartItem Model (cart_items table)
+    - Fields:
+        - cart_item_id → Unique identifier for each item (PK).
+        - cart_id → FK (Foreign Key) linking to carts table (Many-to-One).
+        - product_id → FK linking to products table (Many-to-One).
+        - quantity → Number of units of the product.
+        - product_price → Price of product at time of adding to cart.
+        - discount → Any discount applied on the product.

@@ -1,0 +1,59 @@
+(10.4) AuthUtil class and JPQL:
+=================================
+
+=> Use of AuthUtil class:
+AuthUtils is a class that will be helping us on authentication related tasks. For example, finding logged in 
+users, finding logged in user's user ID, finding logged in user like who is the logged in user? So all 
+these kind of tasks are generic and can be used everywhere across the app.
+
+
+=> JPQL:
+- Syntax for Query Methods Using Custom JPQL Queries:-
+    - @Query("----JPQL Query----")
+      ReturnType methodName(parameters);
+    - Program:-
+    @Query("SELECT s FROM Student s WHERE s.roll = :stdRoll")
+	public Student getStdByRoll(@Param("stdRoll") int roll); 
+	// roll will be set to stdRoll	
+
+- The syntax for Query Methods Using Custom SQL Queries:-
+    - @Query(value = "----SQL Query----", nativeQuery = true)
+      ReturnType methodName(parameters);
+    - Program:
+    /* Providing SQL Query instead of JPQL. Here, we have to use value (to provide 
+	 * SQL Query) and nativeQuery (to set the native query to true)
+	 */
+	
+	@Query(value="SELECT * FROM std_table WHERE std_roll = :stdRoll", 
+				 nativeQuery = true)
+	public Student getStdByRoll(@Param("stdRoll") int roll); 
+
+- Other example:
+@Query("SELECT c FROM Cart c WHERE c.user.username=?1") -> "?1" -> First parameter of method to be passed in query
+Cart findCartByUsername(String username);
+
+- Example
+    - Suppose we have these entities:
+        @Entity
+        public class CartItem {
+            @Id
+            private Long id;
+
+            @ManyToOne
+            private Cart cart;
+
+            @ManyToOne
+            private Product product;
+        }
+
+    - Here: cart is a reference to a Cart entity (not a column).
+          : product is a reference to a Product entity (not a column).
+
+    - In JPQL:
+        SELECT ci FROM CartItem ci WHERE ci.product.product_id = ?1 AND ci.cart.cart_id = ?2
+            - ci → alias for CartItem entity
+            - ci.product.product_id → navigates through the object relationship (product field) and then accesses its id.
+            - ci.cart.id → same for cart.
+    - In SQL (what Hibernate generates under the hood), it will automatically translate that into something like:
+        SELECT * FROM cart_items ci 
+        WHERE ci.product_id = ? AND ci.cart_id = ?

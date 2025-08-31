@@ -1,0 +1,243 @@
+(8.2) Managing user profiles
+==============================
+
+1. "users" Table (Main Table)
+    - Central table that stores user information.
+    - Example fields:
+        - user_id
+        - username
+        - password
+    - Every user in the system (buyer, seller, admin, etc.) will be stored here.
+
+---
+2. "roles" Table
+    - Stores role information (what permissions or authority a user has).
+    - Example roles:
+        - ROLE_USER (buyer/customer)
+        - ROLE_SELLER
+        - ROLE_ADMIN
+    - This makes roles flexible → if we want to add a new role later, just insert a record into this table.
+
+---
+3. "addresses" Table
+    - Stores all the addresses of users.
+    - Example fields:
+        - address_id
+        - street, city, state, zipcode, etc.
+    - Since one user can have multiple addresses (home, office, etc.), this needs a relationship.
+
+---
+4. Junction (Intermediate) Tables [In many to many relationship, we have a separate table that takes care of the relationship]
+    - These tables are created to manage many-to-many relationships:
+        (a) users_roles Table
+            - Connects users ↔ roles.
+            - Why?
+                - A single user can have multiple roles (example: both seller + buyer).
+                - A role can belong to multiple users.
+            - Contains:
+                - user_id (from users)
+                - roles_id (from roles)
+
+        (b) users_addresses Table
+        - Connects users ↔ addresses.
+        - Why?
+            - One user can have multiple addresses.
+            - One address (like a shared office address) could belong to multiple users.
+        - Contains:
+            - user_id (from users)
+            - address_id (from addresses)
+
+---
+
+5. Relationships
+
+- Users ↔ Roles → Many-to-Many
+- Users ↔ Addresses → Many-to-Many
+===
+
+
+-> Why are we using AppRole enum?
+    - The Problem:  In any application, users can have different types of roles. For example, in an e-commerce app:
+        - A User (customer who buys products).
+        - A Seller (person who uploads and sells products).
+        - An Admin (person who manages the whole system).
+
+    = Instead of hardcoding these roles in multiple places in our code, we want a clean and central place to manage them.
+    - The Solution → Use `enum`: Here, each role in your application is a constant.
+    - How This Helps
+        1. Centralized Management
+            All roles are defined in one file (`AppRole.java`).
+            If tomorrow we add a new role (say `ROLE_MANAGER`), we just add it once here.
+
+        2. Readability
+            Instead of remembering role names as strings (`"ROLE_USER"` everywhere),
+            we can use `AppRole.ROLE_USER`.
+            This makes our code more readable and less error-prone.
+
+        3. Safety
+            If we misspell a string `"ROLE_USRE"` → the compiler won’t catch it.
+            But with enums, `AppRole.ROLE_USER` must exist, or else our code won’t compile.
+            So it reduces bugs.
+    - Where We’ll Use It: Later, in our application:
+        - When assigning a role to a user, we can do: user.setRole(AppRole.ROLE_USER);
+        - When checking roles for authorization:
+            if (user.getRole() == AppRole.ROLE_ADMIN) {
+            // allow admin actions
+        }
+
+-> Why we are marking role variable as @Enumerated(EnumType.STRING)?
+    - When we use an enum in Java and store it in a database with JPA (Hibernate), we have two ways to save it:
+        (a) Without @EnumeratedL By default, JPA stores enums as numbers (their ordinal/index). Example:
+            public enum AppRole {
+                ROLE_USER,   // index = 0
+                ROLE_SELLER, // index = 1
+                ROLE_ADMIN   // index = 2
+            }
+            = Problem: If tomorrow we add a new role or change the order, all old data gets messed up.
+        (b) With @Enumerated(EnumType.STRING): This tells JPA:
+            - Save the name of the enum constant (string) instead of its number.
+            - So, if we save ROLE_ADMIN, the database will store "ROLE_ADMIN".
+
+
+-> CascadeType.PERSIST: When we save (persist) the parent entity, the related entities are also automatically saved.
+    Example: 
+    User user = new User();
+    Role role = new Role("ROLE_ADMIN");
+    user.getRoles().add(role);
+    entityManager.persist(user);
+
+-> CascadeType.MERGE: When we update (merge) the parent entity, the related entities are also updated. Example:
+    user.setName("Adhi");
+    role.setName("ROLE_SUPERADMIN");
+    entityManager.merge(user);
+
+
+-> @JoinTable:
+    - When we have a Many-to-Many relationship in JPA (for example: User ↔ Role), we 
+    usually need a third (join) table in the database that connects them. That’s where 
+    @JoinTable comes in.
+    - What @JoinTable does?
+        - It tells Hibernate what the join table is called and how the columns are mapped.
+        - Without it, Hibernate will still create a join table (with default names), but using @JoinTable gives us control over the table name and column names.
+        - Example:
+        @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+        @JoinTable(
+            name = "user_roles",   // join table name
+            joinColumns = @JoinColumn(name = "user_id"),        // column for the User
+            inverseJoinColumns = @JoinColumn(name = "role_id")  // column for the Role
+        )
+        private Set<Role> roles = new HashSet<>();
+
+================
+
+-> unique constraints attributes:
+-----------------------------------
+@Table(name = "users",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = "username"),
+//        @UniqueConstraint(columnNames = "email")
+    })
+
+    - uniqueConstraints = { ... }: 
+        - This part is saying: Make sure some columns in this table must have 
+            unique values (no duplicates allowed).
+
+    - We can also do:
+    @Column(unique = true)
+    private String username;
+
+---------
+
+-> What is orphanRemoval = true?
+We have a User and that user has a collection of Products:
+```
+User
+ └─ products → [Product1, Product2, Product3]
+```
+Now, if we remove a product from the collection in Java, like this:
+```java
+user.getProducts().remove(Product2);
+```
+Here’s what happens:
+    - With `orphanRemoval = true` → Hibernate deletes `Product2` from the database automatically.
+    - Without `orphanRemoval` → Hibernate just removes it from the Set in memory, but the `Product2` still exists in the database.
+
+Think of it like this:
+    - cascade` = “do this operation on the children when doing it on the parent.”
+    - `orphanRemoval = true` = “if a child is removed from the parent, delete it from the DB automatically.”
+
+-> But why, we are using CASCADE merge and persist?
+    1. What `cascade = PERSIST, MERGE` does:
+        `PERSIST` → When we save the parent, Hibernate automatically saves all new children in the collection.
+        Example:
+
+        ```java
+        User user = new User();
+        Product p = new Product();
+        user.getProducts().add(p);
+        entityManager.persist(user);  // Product is automatically persisted too
+        ```
+
+        `MERGE` → When you update the parent, Hibernate automatically updates all the children in the collection.
+        Example:
+
+        ```java
+        user.setName("New Name");
+        entityManager.merge(user);  // Updates User and all Products in the collection
+        ```
+
+    > Important: `PERSIST` and `MERGE` only affect saving/updating, they do not delete children when removed from the collection.
+
+    2, What `orphanRemoval = true` does:
+        -Automatically deletes children removed from the collection, even if the parent still exists.
+        - It’s independent of cascade PERSIST or MERGE.
+
+------
+
+-> @ToString.Exclude
+@ManyToMany(mappedBy = "addresses")
+private List<User> users = new ArrayList<>();
+Why @ToString.Exclude?
+- What `@ToString` does
+    * Lombok automatically generates a `toString()` method for your class.
+    * By default, it includes all fields in the `toString()`.
+
+-The problem with bidirectional relationships
+    * `User` has a `List<Address> addresses`.
+    * `Address` has a `List<User> users`.
+
+If we call `toString()` on `User`:
+```
+User.toString() → includes addresses → each Address.toString() → includes users → each User.toString() → includes addresses ...
+```
+This causes infinite recursion and usually a `StackOverflowError`.
+
+- Why `@ToString.Exclude` is used
+    * Excludes the `users` field from Lombok’s generated `toString()`.
+    * Prevents infinite recursion when printing or logging objects.
+
+- Rule of thumb:
+    * In bidirectional relationships always `@ToString.Exclude` (or `@EqualsAndHashCode.Exclude`) on the back-reference side to avoid recursion.
+    * Usually, the owning side of the relationship is safe to include in `toString()`.
+
+-> (Q) Can we not use @JsonIgnore?
+Yes! we can use `@JsonIgnore` but it serves a different purpose than `@ToString.Exclude`.
+- `@ToString.Exclude`
+    * Prevents Lombok’s `toString()` from including that field.
+    * Purpose: avoid infinite recursion when printing/logging objects.
+    * Does not affect JSON serialization.
+
+- `@JsonIgnore`
+    * Comes from Jackson (used for JSON serialization).
+    * Prevents the field from being serialized to JSON.
+    * Purpose: avoid infinite recursion in JSON output, or hide sensitive data.
+
+    Example:
+    ```java
+    @ManyToMany(mappedBy = "addresses")
+    @JsonIgnore
+    private List<User> users = new ArrayList<>();
+    ```
+    Now, when we return an `Address` object in a REST API, the `users` field will not be included in the JSON.
+
+-----

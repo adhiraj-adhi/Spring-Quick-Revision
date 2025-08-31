@@ -1,0 +1,44 @@
+(10.2) Designing Cart Module:
+===============================
+-> Flow will be same: Browser → Controller → Service → Repository → Database → back.
+
+- Endpoints in Cart Module:
+1. Add Product to Cart
+    - Endpoint: POST /api/carts/products/{productId}/quantity/{/quantity}
+    - Params: productId [Long], quantity [Integer]
+    - Response: CartDTO (JSON object with cart details).
+    - Purpose: Add a product and quantity to the logged-in user’s cart.
+    - Authentication: Required → as server needs to know which user’s cart to update.
+
+2. Get All Carts (Admin Use)
+    - Endpoint: GET /api/carts
+    - Response: List of all carts (CartDTOs).
+    - Purpose: Useful for admin dashboard.
+    - See all carts created in the application (e.g., for analytics).
+
+3. Get Logged-in User’s Cart
+    - Endpoint: GET /api/carts/users/cart
+    - Response: CartDTO (JSON of current user’s cart). 
+    - Purpose: Show user their previously created cart.
+    - Load products and quantities added earlier.
+    - Note: No user info passed explicitly (auth identifies the user).
+    - Rule: One user → One cart only.
+
+4. Update Product Quantity in Cart
+    - Endpoint: PUT /api/cart/products/{productId}/quantity/{operation}
+    - Params: productId [Long], operation (String - e.g., increase/decrease).
+    - Response: Updated CartDTO.
+    - Purpose: Modify quantity of a product already in cart.
+    - Example: Added yoga mat once, now want to update to 2.
+
+5. Delete Product from Cart
+    - Endpoint: DELETE /api/carts/{cartId}/product/{productId}
+    - Params: cartId [Long], productId [Long].
+    - Response: Status message (e.g., product removed successfully).
+    - Purpose: Remove a specific product from the user’s cart.
+
+=> Key Points: All APIs are authenticated 
+    → ensures cart is user-specific.
+    - Checkout clears cart → products move from cart → order.
+    - Module covers major use cases: add, view, update, delete.
+    - Admin-level access → ability to view all carts for insights.

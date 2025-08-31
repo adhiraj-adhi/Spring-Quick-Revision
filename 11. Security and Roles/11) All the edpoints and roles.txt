@@ -1,0 +1,24 @@
+(11) All the edpoints and roles:
+==================================
+=> Categories related:
+(i) GET - /api/public/categories               -> ANYONE  ☑️
+(ii) POST - /api/categories                    -> ADMIN   ✔️
+(iii) DELETE /api/categories/{categoryId}      -> ADMIN   ✔️
+(iv) PUT /api/categories/{categoryId}          -> ADMIN   ✔️
+
+=> Products related:
+(i) GET - /api/public/products                             -> ANYONE ☑️
+(ii) POST - /api/categories/{categoryId}/product           -> SELLER ✅
+(iii) GET - /api/public/categories/{categoryId}/products   -> ANYONE ☑️
+(iv) GET - /api/public/products/keyword/{keyword}          -> ANYONE ☑️
+(v) PUT - /api/products/{productId}  -> SELLER ✅ => Here, we need to write logic to allow seller to update their product only while admin can update any 👍
+(v) PUT - /api/products/{productId}/image -> SELLER ✅ => Here, we need to write logic to allow seller to update their product only while admin can update any 👍
+(vi) DELETE - /api/products/{productId}  -> SELLER and ADMIN ✅ => Here, also we need change in logic.
+(vii) GET - /api/products/count -> ADMIN  ✔️
+
+=> Cart related:
+(i) POST - /api/carts/products/{productId}/quantity/{quantity} -> ANY_LOGGED_IN_USER 👍
+(ii) GET - /api/carts  -> ADMIN   ✔️
+(iii) GET - /api/carts/users/cart  -> ANY_LOGGED_IN_USER 👍
+(iv) PATCH - /api/carts/products/{productId}/quantity/{operation}  -> ANY_LOGGED_IN_USER 👍
+(v) DELETE - /api/carts/product/{productId}  -> ANY_LOGGED_IN_USER 👍

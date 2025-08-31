@@ -1,0 +1,27 @@
+(12.1) Important Learning 1:-
+===============================
+
+-> Suppose we have not created the table for a model class yet then because of using 
+spring.jpa.hibernate.ddl-auto=update in application.properties, the table will be created automatically.
+
+-> If we also want that alongwith the table creation, we insert some data then we can do the following:
+    Step(i): Create a file named data.sql in src/main/resources/ as:
+        -- Insert a sample user
+        INSERT INTO users (username, password) VALUES ('john', 'password123');
+
+        -- Insert roles for that user
+        INSERT INTO authorities (role, user_id) VALUES ('ROLE_USER', 1);
+        INSERT INTO authorities (role, user_id) VALUES ('ROLE_ADMIN', 1); 
+    Step (ii): Use following properties in application.properties file:
+        spring.jpa.defer-datasource-initialization=true -> ensures data.sql runs after Hibernate creates tables.
+        spring.sql.init.mode=always => ensures SQL files (schema.sql, data.sql) always run, even if the DB is not empty.
+    Note: We must comment spring.sql.init.mode=always after first insertion, otherwise with each load data will be inserted.
+
+-> schema.sql and data.sql:
+(i) schema.sql: Used to define the database schema (tables, constraints, indexes). Example:
+    CREATE TABLE users (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(50),
+        password VARCHAR(100)
+    );
+(ii) data.sql: Used to insert initial data into the database.

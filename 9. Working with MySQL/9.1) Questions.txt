@@ -1,0 +1,22 @@
+9.1) Questions:
+================
+
+-> After running our program, we can see that we hava a table name "product_seq" created. Why?
+That table is automatically created by Hibernate because of the way we annotated our Product entity’s 
+id field. In our Product entity, we have something like:
+@Id
+@GeneratedValue(strategy = GenerationType.AUTO) // or, GenerationType.SEQUENCE
+private Long id;
+
+    - MySQL does not support real database sequences like Oracle or PostgreSQL.
+    - Hibernate still needs a sequence-like mechanism if you use `SEQUENCE` or `AUTO`.
+    - So Hibernate emulates sequences in MySQL by creating a special table, for example:
+        - `product_seq` with one column `next_val`.
+        - Hibernate increments `next_val` each time a new `Product` row is inserted.
+
+
+- If we don’t want `product_seq`. For MySQL, the best practice is to use IDENTITY strategy:
+
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;

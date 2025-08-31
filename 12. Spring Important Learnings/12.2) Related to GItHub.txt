@@ -1,0 +1,14 @@
+(12.2) Related to GItHub:
+===========================
+
+-> I created Readme file from git hub and did the commit. Next time after succesffully commiting the changes and then tried pushing the changes when
+I tried pushing the code using the terminal, I got error because remote already has commits we don’t have locally.
+To handle this issue I run these commands step by step:
+# 1. Fetch latest changes from remote
+git fetch origin
+
+# 2. Merge remote main into our local main
+git pull origin main --rebase
+
+# 3. Now push our commits
+git push origin main

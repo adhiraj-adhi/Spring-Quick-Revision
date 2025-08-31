@@ -1,0 +1,28 @@
+(10.1) Thinking about Cart Functionality:
+===========================================
+📌 Types of Shopping Carts:
+1. Session-based Cart: Cart stored in user session.
+    - Simple, good for small/low traffic sites.
+    - Limitations:
+        - Session expires → cart lost.
+        - Not accessible across devices (desktop → mobile).
+
+2. Cookie-based Cart: Cart stored in browser cookies.
+    - Persists beyond one session.
+    - Limitations:
+        - Size restrictions as cookies size is limited.
+        - Privacy/security concerns.
+        - If cookies cleared → cart lost.
+
+3. Database-based Cart: Cart stored on the server-side database.
+    - Advantages:
+        - Persistent (data not lost after session expiry), scalable, secure.
+        - Accessible across devices.
+        - Supports advanced features like:
+            - Cart recovery (reminder emails, offers).
+            - Analytics (e.g., products often added but not bought).
+            - Personalized recommendations.
+            - Wish lists & Save for later.
+            - Enables marketing campaigns (e.g., discount emails for products in cart).
+    - Limitation: Slightly more complex to implement.
+

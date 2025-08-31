@@ -1,0 +1,28 @@
+(8.1) JWT Related:
+====================
+-> We will be creating following classes:
+
+1. JwtUtils class:
+    - Contains helper/utility methods for generating, parsing, and validating JWT tokens.
+    - Include generating a token from a username, validating a JWT, and extracting the username from a token.
+
+
+2. AuthTokenFilter:
+    - Filters incoming requests to check for a valid JWT in the header, setting the authentication context if token is valid.
+    - Extracts JWT from request header, validates it, and configures the Spring Security context with user details if the token is valid.
+
+3. AuthEntryPointJwt
+    - Provides custom handling for unauthorized requests, typically when authentication is required but not supplied or valid.
+    - When an unauthorized request is detected, it logs the error and returns a JSON response with an error message, status code, and the path attempted.
+
+ 
+
+-> We will configures Security Config (SecurityConfig) to:
+  - Register the AuthTokenFilter in the Security Filter Chain.
+  - Tell Spring when to apply the JWT filter (before UsernamePasswordAuthenticationFilter).
+  - Configure which endpoints are public (e.g., /login, /signup) and which require authentication.
+  - Attach AuthEntryPointJwt as the handler for unauthorized requests.
+
+
+
+-> We can get the dependency by searching "jwt github maven" on google or from the following URL: https://github.com/jwtk/jjwt?tab=readme-ov-file#maven
